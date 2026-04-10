@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 from rest_framework.routers import DefaultRouter
 # from .views import UserViewSet
-from backend.blog.models import User
+from blog.models import User
 
 # router = DefaultRouter()
 

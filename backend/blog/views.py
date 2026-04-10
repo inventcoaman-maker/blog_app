@@ -7,7 +7,7 @@ from django.utils import timezone
 from .models import Post, Category, Tag, Comment
 from django.shortcuts import render , get_object_or_404
 from django.http import HttpResponse
-from backend.blog.models import Post
+from blog.models import Post
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.http import Http404
@@ -22,7 +22,7 @@ from .models import Category,Tag
 from django.db.models import Q
 from .models import Comment
 
-from backend.blog.models import Post
+from blog.models import Post
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from .models import Post, Category, Tag, Comment

@@ -13,8 +13,8 @@ from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
-from backend.blog.models import Post
-from backend.blog.models import Category,Tag
+from blog.models import Post
+from blog.models import Category,Tag
 from django.core.validators import RegexValidator
 from .pagination import CustomPagination
 today = timezone.now().date()
