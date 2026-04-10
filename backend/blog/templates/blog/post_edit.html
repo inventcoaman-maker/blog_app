@@ -1,0 +1,22 @@
+{% extends 'blog/base.html' %} {% load static %} {% block content %}
+<div class="">{% block filter %}{% endblock %}</div>
+<div class="edit_div">
+  <h2 class="h2">
+    {% if post %} Edit Post {% else %} Create New Post {% endif %}
+  </h2>
+
+  <form method="POST" class="post-form" enctype="multipart/form-data">
+    {% csrf_token %} {{ form.as_p }}
+    <!-- <div>{{ form.title.errors }}</div>
+  <div>{{ form.text.errors }}</div> -->
+
+    <!-- <div class="alert alert-danger">
+    {% for error in errors %}
+    <p>{{ error }}</p>
+    {% endfor %}
+  </div> -->
+
+    <button type="submit" class="save btn btn-secondary">Save</button>
+  </form>
+</div>
+{% endblock %}

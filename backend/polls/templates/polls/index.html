@@ -1,0 +1,25 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <link rel="stylesheet" href="{% static 'polls/style.css' %}" />
+  </head>
+  <body>
+    <ul>
+      <div class="question_div">
+        {% for i in questions_lst %}
+        <div class="sub_div">
+          <div>{{ forloop.counter }}.</div>
+          <a class="question" href="{% url 'polls:detail' i.id %}">
+            {{ i.question_text }}
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </ul>
+  </body>
+</html>

@@ -1,0 +1,134 @@
+{% extends 'blog/base.html' %} {% block content %}
+
+<!-- FILTERS -->
+
+<div class="dropdowns d-flex gap-3 mb-4">
+  <!-- CATEGORY FILTER -->
+  <div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+      Search by Category
+    </button>
+
+    <ul class="dropdown-menu">
+      <li>
+        <a class="dropdown-item" href="/">All Posts</a>
+      </li>
+
+      {% for category in categories %}
+      <li>
+        <a class="dropdown-item" href="?category={{ category.name }}">
+          {{ category.name }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+      Search by Tags
+    </button>
+
+    <ul class="dropdown-menu">
+      <li>
+        <a class="dropdown-item" href="/">All Posts</a>
+      </li>
+
+      {% for tag in tags %}
+      <li>
+        <a class="dropdown-item" href="?tags={{ tag.name }}">
+          {{ tag.name }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+      Search by Author
+    </button>
+
+    <ul class="dropdown-menu">
+      <li>
+        <a class="dropdown-item" href="/">All Posts</a>
+      </li>
+
+      {% for author in authors %}
+      <li>
+        <a class="dropdown-item" href="?author={{ author.email }}">
+          {{ author }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<!-- POSTS -->
+
+<div class="row">
+  {% for post in posts %}
+
+  <div class="col-md-6 mb-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5>
+          {% if post.image %}
+          <img src="{{ post.image.url }}" width="40" />
+          {% endif %}
+
+          <a href="{% url 'post_detail' pk=post.pk %}"> {{ post.title }} </a>
+        </h5>
+        <p class="text-muted">
+          Category:
+          <a href="?category={{ post.category.name }}"> {{ post.category }} </a>
+        </p>
+
+        <div class="">
+          {% for tag in post.tags.all %}
+          <a href="?tags={{ tag.name }}" class="badge bg-secondary">
+            {{ tag.name }}
+          </a>
+          {% endfor %}
+        </div>
+
+        <p>{{ post.text|truncatewords:20 }}</p>
+      </div>
+
+      <div class="card-footer d-flex justify-content-between">
+        <small>
+          <a href="?author={{ post.author.email }}"> {{ post.author }} </a>
+
+          | {{ post.created_date }}
+        </small>
+
+        {% if request.user == post.author %}
+
+        <a
+          href="{% url 'post_edit' pk=post.pk %}"
+          class="btn btn-sm btn-outline-primary"
+        >
+          Edit
+        </a>
+
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% empty %}
+
+  <h4>No posts found</h4>
+
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+<!-- {
+  "first_name":"mkolp",
+  "last_name":"qwer",
+  "email": "oye!!new34@gmail.com",
+  "password": "Ajagd@#1234"
+  } -->

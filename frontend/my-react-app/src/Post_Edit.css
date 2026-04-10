@@ -1,0 +1,129 @@
+* {
+    box-sizing: border-box;
+}
+
+/* Main wrapper */
+.edit-wrapper {
+    min-height: 100vh;
+    background: #f5f6f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Form card */
+.edit-card {
+    width: 100%;
+    max-width: 700px;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.edit-card h2 {
+    margin-bottom: 25px;
+    text-align: center;
+    font-size: 26px;
+}
+
+/* Labels */
+.edit-card label {
+    display: block;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Inputs */
+.edit-card input[type="text"],
+.edit-card select,
+.edit-card textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+}
+
+.edit-card textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.edit-card input:focus,
+.edit-card select:focus,
+.edit-card textarea:focus {
+    border-color: #667eea;
+}
+
+/* file field */
+.file-field {
+    margin-top: 15px;
+}
+
+/* current file text */
+.file-field p {
+    font-size: 13px;
+    color: #e11;
+    margin-bottom: 5px;
+}
+
+/* file input (VISIBLE) */
+.edit-card input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    position: static;
+    opacity: 1;
+}
+
+/* file button */
+.edit-card input[type="file"]::file-selector-button {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+/* checkbox */
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.checkbox input {
+    width: 18px;
+    height: 18px;
+}
+
+.checkbox label {
+    margin: 0;
+}
+
+/* save button */
+.save-btn {
+    width: 100%;
+    margin-top: 25px;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.save-btn:hover {
+    opacity: 0.9;
+}

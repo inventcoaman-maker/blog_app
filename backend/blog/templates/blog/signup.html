@@ -1,0 +1,106 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup</title>
+    <link rel="stylesheet" href="{% static 'css/blog.css' %}" />
+  </head>
+
+  <body>
+    <div class="top-menu-div">
+      <div class="logo-div">
+        <div class="bp">
+          <h1>
+            <a class="logo" href="/">Django Girls Blog</a> /
+            <a class="logo" href="{% url 'polls:index' %}">Go To Polls</a>
+          </h1>
+        </div>
+
+        <div class="login_svg">
+          {% if user.is_authenticated %}
+          <a href="{% url 'post_new' %}" class="top-menu">
+            {% include './icons/file-earmark-plus.svg' %}
+          </a>
+          <a href="{% url 'logout' %}" class="btn btn-primary">Logout</a>
+          {% else %}
+          <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+          <a href="{% url 'signup' %}" class="btn btn-primary">Signup</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="super_form_div">
+      <div class="form_div">
+        <form action="{% url 'signup' %}" method="post">
+          {% csrf_token %}
+
+          <!-- Username -->
+          <label>first_name:</label>
+          <input
+            type="text"
+            name="first_name"
+            required
+            minlength="3"
+            pattern="[A-Za-z0-9]+"
+            title="Username must be at least 3 characters and contain only letters and numbers"
+          />
+
+          <br /><br />
+          <label>last_name:</label>
+          <input
+            type="text"
+            name="last_name"
+            required
+            minlength="3"
+            pattern="[A-Za-z0-9]+"
+            title="Username must be at least 3 characters and contain only letters and numbers"
+          />
+
+          <br /><br />
+          <!-- Password -->
+          <label>Password:</label>
+          <input
+            type="password"
+            name="password"
+            required
+            pattern="^(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$"
+            title="Password must be 8+ characters, include uppercase and special symbol"
+          />
+          <br /><br />
+          <!-- Confirm Password -->
+          <label>Confirm Password:</label>
+          <input type="password" name="confirm_password" required />
+          <br /><br />
+          <!-- Email -->
+          <label>Email:</label>
+          <input type="email" name="email" required />
+          <br /><br />
+          {% if errors %}
+          <div style="color: red">
+            {% for e in errors %}
+            <p>{{ e }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <button class="login_button" type="submit">Sign Up</button>
+          <!-- Django Messages -->
+          <!-- {% if messages %} {% for message in messages %}
+          <script>
+            alert("{{ message }}");
+          </script>
+          {% endfor %} {% endif %} -->
+
+          <!-- Login link FIXED -->
+          <p>
+            if you already have an account
+            <span><a href="{% url 'login' %}">Login</a></span>
+          </p>
+        </form>
+      </div>
+    </div>
+    <script src="js/script.js"></script>
+  </body>
+</html>

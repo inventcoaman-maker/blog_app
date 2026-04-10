@@ -1,0 +1,124 @@
+/* Page layout */
+.post-container {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.post-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
+/* left card */
+.post-card {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.post-title {
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.post-image {
+    width: 50%;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    height: auto;
+}
+
+/* category tags */
+.post-meta {
+    margin: 10px 0;
+}
+
+.tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background: #f1f1f1;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+/* comment box */
+.comment-box {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.comment-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+}
+
+.comment-btn {
+    padding: 8px 14px;
+    border: 1px solid #000;
+    background: #eee;
+    cursor: pointer;
+}
+
+/* comments */
+.comment-item {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+}
+
+.reply-item {
+    margin-left: 30px;
+    color: #555;
+}
+
+.reply-box {
+    margin-left: 30px;
+    margin-top: 5px;
+    display: flex;
+    gap: 8px;
+}
+
+/* right sidebar */
+.sidebar {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    height: fit-content;
+}
+
+.sidebar p {
+    margin-bottom: 10px;
+}
+
+.edit-link {
+    display: inline-block;
+    margin-top: 10px;
+    text-decoration: none;
+    color: black;
+}
+
+/* back button */
+.back-btn {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.back-btn a {
+    background: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+}
