@@ -9,6 +9,7 @@ export default function Post_detail() {
   const [commentText, setCommentText] = useState("");
   const [reply, setReply] = useState([]);
   const [replyText, setReplyText] = useState("");
+  const [replyInput, setReplyInput] = useState(false);
   // console.log(comment);
   console.log(reply);
   console.log(post);
@@ -111,6 +112,8 @@ export default function Post_detail() {
       .then((data) => setUser(data));
   }, [token]);
 
+  const handleReply = () => setReplyInput((prev) => !prev);
+
   return (
     <>
       <div className="post-container">
@@ -118,19 +121,14 @@ export default function Post_detail() {
           <div className="post-card">
             <h1 className="post-title">{post.title}</h1>
 
-            {post.image ? (
+            {post.thumbnail_image ? (
               <img
-                src={`${import.meta.env.VITE_API_URL}${post.image}`}
+                src={`${import.meta.env.VITE_API_URL}${post.thumbnail_image}`}
                 alt="Post"
                 className="post-image"
+                thumbnail_image
               />
-            ) : (
-              <img
-                src="https://placehold.co/800x400"
-                alt="Post"
-                className="post-image"
-              />
-            )}
+            ) : null}
 
             <div className="post-meta">
               <p>
@@ -167,7 +165,16 @@ export default function Post_detail() {
 
                 {comment.map((value) => (
                   <div key={value.id} className="comment-item">
-                    <div>{value.text}</div>
+                    <div>
+                      {value.text}{" "}
+                      <button
+                        onClick={handleReply}
+                        type="button"
+                        class="btn btn-secondary"
+                      >
+                        reply
+                      </button>
+                    </div>
 
                     {reply.map((r) =>
                       r.comment === value.id ? (
@@ -176,21 +183,22 @@ export default function Post_detail() {
                         </div>
                       ) : null,
                     )}
-
-                    <div className="reply-box">
-                      <input
-                        value={replyText[value.id] || ""}
-                        onChange={(e) =>
-                          setReplyText((prev) => ({
-                            ...prev,
-                            [value.id]: e.target.value,
-                          }))
-                        }
-                      />
-                      <button onClick={() => handleReplyClick(value.id)}>
-                        Reply
-                      </button>
-                    </div>
+                    {replyInput ? (
+                      <div className="reply-box">
+                        <input
+                          value={replyText[value.id] || ""}
+                          onChange={(e) =>
+                            setReplyText((prev) => ({
+                              ...prev,
+                              [value.id]: e.target.value,
+                            }))
+                          }
+                        />
+                        <button onClick={() => handleReplyClick(value.id)}>
+                          Reply
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </>

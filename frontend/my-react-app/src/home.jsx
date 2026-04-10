@@ -302,13 +302,7 @@ function Home() {
                       alt={post.title}
                       className="post-image"
                     />
-                  ) : (
-                    <img
-                      src="https://placehold.co/400x200?text=No+Image"
-                      alt={post.title}
-                      className="post-image"
-                    />
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="post-content">

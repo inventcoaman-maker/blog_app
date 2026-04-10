@@ -36,7 +36,7 @@ function Signup() {
     const data = await res.json();
     if (res.ok) {
       setSuccess(data.message);
-      navigate("/login");
+      navigate("/");
     } else {
       setError(data.error);
     }
