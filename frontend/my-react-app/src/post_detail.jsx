@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./post_detail.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart as solidHeart } from "@fortawesome/free-solid-svg-icons";
+import { faHeart as regularHeart } from "@fortawesome/free-regular-svg-icons";
+import { resolveImageUrl } from "./utils/imageUrl";
+
 export default function Post_detail() {
   const { id } = useParams();
   const [post, setPost] = useState({});
@@ -10,6 +15,8 @@ export default function Post_detail() {
   const [reply, setReply] = useState([]);
   const [replyText, setReplyText] = useState("");
   const [replyInput, setReplyInput] = useState(false);
+  const [like, setLike] = useState(false);
+  // const [likeToggle, setLikeToggle] = useState(false);
   // console.log(comment);
   console.log(reply);
   console.log(post);
@@ -27,7 +34,8 @@ export default function Post_detail() {
     })
       .then((res) => res.json())
       .then((data) => setPost(data.data));
-  }, [id]);
+    // .then((data) => setLike(data.data.is_liked));
+  }, []);
 
   const handleComment = (e) => {
     setCommentText(e.target.value);
@@ -114,6 +122,29 @@ export default function Post_detail() {
 
   const handleReply = () => setReplyInput((prev) => !prev);
 
+  const handleLike = async () => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/like/${id}/`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    setLike(data.liked);
+
+    // setLikeCount(data.like_count);
+  };
+  useEffect(() => {
+    if (post) {
+      setLike(post.is_liked);
+    }
+  }, [post]);
+
+  // const handleLikeToggle = () => {
+  //   setLikeToggle((prev) => !prev);
+  // };
+
   return (
     <>
       <div className="post-container">
@@ -123,10 +154,9 @@ export default function Post_detail() {
 
             {post.thumbnail_image ? (
               <img
-                src={`${import.meta.env.VITE_API_URL}${post.thumbnail_image}`}
+                src={resolveImageUrl(post.thumbnail_image)}
                 alt="Post"
                 className="post-image"
-                thumbnail_image
               />
             ) : null}
 
@@ -170,7 +200,7 @@ export default function Post_detail() {
                       <button
                         onClick={handleReply}
                         type="button"
-                        class="btn btn-secondary"
+                        className="btn btn-secondary"
                       >
                         reply
                       </button>
@@ -201,6 +231,17 @@ export default function Post_detail() {
                     ) : null}
                   </div>
                 ))}
+                <FontAwesomeIcon
+                  onClick={handleLike}
+                  icon={like ? solidHeart : regularHeart}
+                  style={{
+                    cursor: "pointer",
+                    fontSize: "26px",
+                    color: like ? "red" : "black",
+                    transition: "all 0.2s ease",
+                    transform: like ? "scale(1.2)" : "scale(1)",
+                  }}
+                />
               </>
             )}
           </div>

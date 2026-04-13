@@ -27,6 +27,8 @@ urlpatterns=[
     path("singlePost/<int:id>/",views.singlePost.as_view()),
     path("reply/<int:post_id>/",views.reply.as_view()),
     path("profile/",views.profile.as_view()),
+    path("like/<int:post_id>/",views.like.as_view()),
+
 
     # path("bycategoryTag/",views.bycategoryTag.as_view())
 

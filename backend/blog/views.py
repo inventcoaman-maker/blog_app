@@ -43,6 +43,8 @@ from django.core.exceptions import ValidationError
 
 def homeApp(request):
     print(len(Post.objects.all()))
+    # post=get_object_or_404(Post,id=1)
+    # print(post.like.all())
 
     # user=request.user
 
@@ -193,6 +195,8 @@ def homeApp(request):
 def post_detail(request, pk):
 
     post = get_object_or_404(Post, pk=pk)
+    likes=post.like.count()
+    print(likes)
 
     categories = Category.objects.all()
     tags = Tag.objects.all()

@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import "./home.css";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHeart } from "@fortawesome/free-solid-svg-icons";
+import { faComment as regularComment } from "@fortawesome/free-regular-svg-icons";
+import { resolveImageUrl } from "./utils/imageUrl";
 
 function Home() {
   const [posts, setPost] = useState([]);
@@ -10,9 +14,11 @@ function Home() {
   const [category, setCategory] = useState([]);
   const [tag, setTag] = useState([]);
   const [authors, setAuthors] = useState([]);
+  // const [like,setLike]=useState(false)
   const [searchParams, setSearchParams] = useSearchParams();
   const token = localStorage.getItem("access");
   // const { id } = useParams();
+  console.log(authors);
 
   // tag.map((item, index) => console.log(item.id));
   // const new_arrr = [];
@@ -298,7 +304,7 @@ function Home() {
                 <div className="post-image-container">
                   {post.image ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL}${post.image}`}
+                      src={resolveImageUrl(post.image)}
                       alt={post.title}
                       className="post-image"
                     />
@@ -332,20 +338,46 @@ function Home() {
                   </div>
 
                   <div className="post-footer">
-                    <span
-                      className="post-author"
-                      onClick={() => handleauthorClick(post.author)}
-                    >
-                      👤 {post.email}
-                    </span>
+                    <div className="left">
+                      <span
+                        onClick={() => handleauthorClick(post.author)}
+                        className="post-author"
+                      >
+                        👤 {post.email}
+                      </span>
+                      <span className="post-date">📅 {post.created_date}</span>
+                    </div>
 
-                    <span className="post-date">📅 {post.created_date}</span>
+                    <div className="right">
+                      {user.email === post.email && (
+                        <Link
+                          to={`/post_edit/${post.id}`}
+                          className="edit-link"
+                        >
+                          ✏️ Edit
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                  <div className="like_comment">
+                    <div className="icon_group">
+                      {post.total_likes > 0 ? (
+                        <>
+                          <FontAwesomeIcon
+                            icon={faHeart}
+                            className="like_icon"
+                          />
+                          <p>{post.total_likes}</p>
+                        </>
+                      ) : (
+                        <FontAwesomeIcon icon={faHeart} />
+                      )}
+                    </div>
 
-                    {user.email === post.email && (
-                      <Link to={`/post_edit/${post.id}`} className="edit-link">
-                        ✏️ Edit
-                      </Link>
-                    )}
+                    <div className="icon_group">
+                      <FontAwesomeIcon icon={regularComment} />
+                      <p>{post.total_comments}</p>
+                    </div>
                   </div>
                 </div>
               </div>

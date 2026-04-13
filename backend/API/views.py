@@ -284,6 +284,7 @@ class selfPostUpdate(APIView):
         try:
           x=Post.objects.filter(author=request.user)
           postId=get_object_or_404(x,id=id)
+          print(postId)
           serailizer=postSerailizer(postId)
           return Response(serailizer.data,
                   status=status.HTTP_200_OK)
@@ -525,7 +526,7 @@ class singlePost(APIView):
         print(x.comments.all())
         # print(x.comments.all())
 
-        serailizer=postSerailizer(x)
+        serailizer=postSerailizer(x,context={"request": request})
         return Response({
             "status": 200,
             "statusText": "ok",
@@ -601,7 +602,7 @@ class profile(APIView):
                 serializer.data
         })
     
-    def patch(self,request):
+    def put(self,request):
         rule = re.compile(r'^[0-9]+$')
         x=User.objects.get(id=request.user.id)
         print(x.phone)
@@ -630,158 +631,20 @@ class profile(APIView):
             })                
         return Response(serializer.errors, status=400)
     
+class like(APIView):
+       permission_classes=[IsAuthenticated]
+       def post(self, request, post_id):
+        post = get_object_or_404(Post,id=post_id)
+        user=request.user
+        if user in post.like.all():
+            post.like.remove(user)
+            like=False
+        else:
+            post.like.add(user)
+            like=True
 
-# 1  {
-# "first_name":"qqqq",
-# "last_name":"mmmm",
-# "email": "first@gmail.com",
-# "password": "Ajagd435@#34"
-# }
+        return Response({
+            "liked": like,
+            "like_count": post.like.count()
+        })
 
-
-# 2 {
-# "first_name":"qqqq",
-# "last_name":"mmmm",
-# "email": "second@gmail.com",
-# "password": "Ajagd435@#34"
-# }
-
-{
-"first_name":"mkolp",
-"last_name":"qwer",
-"email": "oyeok!@#!!!@#@gmail.com",
-"password": "Ajagd@#1234"
-}
-
-{
-    "old_password":"Ajagd@#1234",
-    "new_password":"Ajagd@#123465"
-}
-
-{
-"first_name":"mkolp",
-"last_name":"qwer",
-"email": "new maill@gmail.com",
-"password": "Ajagd@#1234"
-}
-
-
-{
-"first_name":"alsonew",
-"last_name":"qwer",
-"email": "new121234@gmail.com",
-"password": "Ajagd435@#34"
-}
-
-{
-"first_name":"alsonew",
-"last_name":"qwer",
-"email": "newlpmkko@gmail.com",
-"password": "Ajagd435@#34"
-}
-    
-
-{
-"first_name":"mkolp",
-"last_name":"qwer",
-"email": "oyeok!@#@gmail.com",
-"password": "Ajagd435@#34"
-}
-
-      
-
-
-
-# from rest_framework import viewsets
-# from blog.models import User
-# from .serializers import *
-
-# class UserViewSet(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = userSerailizer
-
-
-
-        
-# Create your views here.
-# {
-
-#  "email": "king@yo",
-#  "password": "aman123"
-# } 
-
-
-
-# {
-#  "first_name": "neww",
-#  "last_name": "Jha",
-#  "email": "new@yo",
-#  "password": "yooo123"
-# }
-
-# {
-#  "email": "new@yo",  
-#  "password": "yooo123"
-# }
-
-
-# {
-#   "first_name": "ajay",
-#  "last_name": "Jha",
-#  "email": "ajay@yo",
-#   "password": "ajay1234"
-# }
-
-
-# {
-# "first_name":"new5754775one",
-# "last_name":"odgdfhfdh4574kk",
-# "email": "ajay24325235dfgdf@yo",
-# "password": "ajagdfgy1234"
-# }
-
-
-
-
-
-# {
-# "first_name":"new575475462575one",
-# "last_name":"odgdfhfryrtdh4574kk",
-# "email": "ajay24325235dfgdf@yopmail.com",
-# "password": "ajagdfgy1243534"
-# }
-
-
-
-# {
-# "first_name":"gfdgbbzg34536",
-# "last_name":"bbzdd55yyeys",
-# "email": "hfghf4747yrtyut45@yopmail.com",
-# "password": "Ndeyeyed5@12747"
-# }
-
-
-# {
-# "first_name":"ngnzfzdj",
-# "last_name":"bbzdd55yyeys",
-# "email": "hfghf47@gmail.com",
-# "password": "Nfnzdhher@312h"
-# }
-
-
-#  aman1@yopmail.com
-
-
-{
-"first_name":"new name",
-"last_name":"yess",
-"email": "newname@gmail.com",
-"password": "Newpass@#123"
-}
-
-
-
-{
-    "old_password":"Newpass@#123",
-    "new_password":"Newpass@#12389"
-}

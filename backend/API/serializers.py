@@ -37,6 +37,10 @@ class postSerailizer(serializers.ModelSerializer):
         format="%Y-%m-%d",
         read_only=True
     )
+    is_liked = serializers.SerializerMethodField()
+    total_likes=serializers.SerializerMethodField()
+    total_comments=serializers.SerializerMethodField()
+
 
     class Meta:
         model = Post
@@ -45,6 +49,18 @@ class postSerailizer(serializers.ModelSerializer):
 
     def get_tag_names(self, obj):
         return [tag.name for tag in obj.tags.all()]
+    
+    def get_is_liked(self, obj):
+      request = self.context.get('request')
+      if request and request.user.is_authenticated:
+         return obj.like.filter(id=request.user.id).exists()
+      return False
+    
+    def get_total_likes(self,obj):
+        return obj.like.count()
+    
+    def get_total_comments(self,obj):
+        return obj.comments.count()
         
 
 
@@ -88,5 +104,9 @@ class authorSeriallizer(serializers.ModelSerializer):
 
 
 
+# class likeSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model=Post
+#         fields=("like",) 
 
-    
+

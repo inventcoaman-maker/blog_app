@@ -90,7 +90,9 @@ class Post(models.Model):
         related_name="posts"
     )
 
+
     is_private = models.BooleanField(default=False)
+    like = models.ManyToManyField(User, related_name='blog_posts', blank=True)
 
     def publish(self):
         self.published_date = timezone.now()
@@ -98,7 +100,8 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
-    
+
+
 
 class Comment(models.Model): 
     post = models.ForeignKey(

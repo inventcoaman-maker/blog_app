@@ -100,12 +100,16 @@
 .post-image-container {
     width: 100%;
     overflow: hidden;
+    min-height: 180px;
+    background: #f8fafc;
 }
 
 .post-image {
     width: 100%;
-    height: auto;
+    height: 220px;
     object-fit: cover;
+    display: block;
+    transition: transform .3s ease;
 }
 
 .post-card:hover .post-image {
@@ -146,6 +150,7 @@
     line-height: 1.4;
 
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -220,4 +225,68 @@
     .welcome-content h1 {
         font-size: 2rem;
     }
+}
+
+.left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.like_comment {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 18px 18px;
+    border-top: 1px solid #f3f4f6;
+    margin-top: 12px;
+}
+
+.icon_group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.icon_group p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #475569;
+}
+
+.icon_group svg {
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.icon_group svg:hover {
+    opacity: 0.75;
+    transform: scale(1.05);
+}
+
+.like_icon {
+    color: #ef4444;
+}
+
+
+/* count text */
+.icon_group p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #262626;
+}
+
+/* red heart */
+.like_icon {
+    color: red;
 }

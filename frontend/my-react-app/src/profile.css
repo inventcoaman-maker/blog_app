@@ -140,3 +140,21 @@
         font-size: 1.75rem;
     }
 }
+
+.profilee-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: none;
+    background: #667eea;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.home-icon {
+    font-size: 14px;
+    /* 👈 small icon */
+}
