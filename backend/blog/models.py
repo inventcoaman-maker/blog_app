@@ -93,6 +93,7 @@ class Post(models.Model):
 
     is_private = models.BooleanField(default=False)
     like = models.ManyToManyField(User, related_name='blog_posts', blank=True)
+    pin_post= models.ManyToManyField(User,blank=True,related_name='blog_posts_pin_post')
 
     def publish(self):
         self.published_date = timezone.now()

@@ -137,6 +137,18 @@
     height: fit-content;
 }
 
+.edit_delete {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    align-items: center;
+}
+
+.post {
+    background: var(--card);
+    border: 1px solid var(--border);
+}
+
 .post-meta p {
     margin: 0 0 10px;
     color: #475569;

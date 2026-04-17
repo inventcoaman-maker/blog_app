@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import "./changePassword.css";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHouse } from "@fortawesome/free-solid-svg-icons";
+
 export default function ChangePassword() {
   const [currentPass, setCurrentPass] = useState({
     old_password: "",
@@ -40,8 +44,9 @@ export default function ChangePassword() {
     );
     if (res.ok) {
       navigate("/");
+      toast.success("Password changed successfully 🎉");
     } else {
-      setError("Failed to change password");
+      toast.error("Failed to change password");
     }
   };
   return (
@@ -70,8 +75,17 @@ export default function ChangePassword() {
                 placeholder="Enter new password"
               />
             </div>
-            {error ? <p className="error">{error}</p> : null}
+            {/* {error && toast.error(error)} */}
             <button className="password-btn">Change Password</button>
+            <div className="home_div">
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="profilee-btn"
+              >
+                <FontAwesomeIcon icon={faHouse} className="home-icon" />
+              </button>
+            </div>
           </form>
         </div>
       </div>

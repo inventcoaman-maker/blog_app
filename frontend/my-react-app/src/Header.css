@@ -1,9 +1,10 @@
 .header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--header-bg, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
     padding: 20px 0;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
 }
 
 .container {
@@ -51,13 +52,14 @@
     transition: all 0.3s ease;
     font-weight: 500;
     font-size: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--button-border, rgba(255, 255, 255, 0.2));
     backdrop-filter: blur(10px);
+    background: var(--button-bg, rgba(255, 255, 255, 0.15));
 }
 
 .login:hover,
 .signup:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--button-hover, rgba(255, 255, 255, 0.2));
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
@@ -90,4 +92,46 @@
     object-fit: cover;
     border: 3px solid #e5e7eb;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.post {
+    background: var(--card);
+    border: 1px solid var(--border);
+}
+
+.toggle-container {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--toggle-track, rgba(255, 255, 255, 0.25));
+    border: 1px solid var(--button-border, rgba(255, 255, 255, 0.2));
+    cursor: pointer;
+}
+
+.toggle-container input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.toggle-btn {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--toggle-thumb, #ffffff);
+    transition: transform 0.25s ease, background 0.25s ease;
+    z-index: 1;
+}
+
+.toggle-container input:checked+.toggle-btn {
+    transform: translateX(24px);
+    background: var(--toggle-thumb, #f8fafc);
 }

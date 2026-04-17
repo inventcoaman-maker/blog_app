@@ -17,6 +17,7 @@ urlpatterns=[
     path('postCreate/',views.postCreate.as_view()),
     path('currentUserPost/',views.currentUserPost.as_view()),
     path('selfPostUpdate/<int:id>/',views.selfPostUpdate.as_view()),
+    path('selfPostDelete/<int:id>/',views.selfPostDelete.as_view()),
     path('allPost/',views.allPost.as_view()),
     path("category/",views.category.as_view()),
     path("Tag/",views.tag.as_view()),
@@ -28,6 +29,7 @@ urlpatterns=[
     path("reply/<int:post_id>/",views.reply.as_view()),
     path("profile/",views.profile.as_view()),
     path("like/<int:post_id>/",views.like.as_view()),
+    path("pin_post/<int:post_id>/",views.pin_post.as_view()),
 
 
     # path("bycategoryTag/",views.bycategoryTag.as_view())

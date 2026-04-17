@@ -1,6 +1,7 @@
 import { Link, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import "./signup.css";
 function Signup() {
@@ -13,7 +14,7 @@ function Signup() {
     confirm_password: "",
   });
   console.log(inputValue);
-  const [success, setSuccess] = useState("");
+  // const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   console.log(inputValue);
 
@@ -35,8 +36,8 @@ function Signup() {
     });
     const data = await res.json();
     if (res.ok) {
-      setSuccess(data.message);
       navigate("/");
+      toast.success("Signup successful 🎉");
     } else {
       setError(data.error);
     }

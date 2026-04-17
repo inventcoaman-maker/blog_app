@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import "./Post_Edit.css";
 import { useParams, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHouse } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 
 export default function Post_Edit() {
   const { id } = useParams();
@@ -76,6 +79,11 @@ export default function Post_Edit() {
         body: formData,
       },
     );
+    if (res.ok) {
+      toast.success("Post updated successfully");
+    } else {
+      toast.error("Failed to update post");
+    }
 
     const data = await res.json();
     console.log(data);
@@ -179,6 +187,15 @@ export default function Post_Edit() {
             <label htmlFor="is_private">Is private</label>
           </div>
           <button className="save-btn">Save</button>
+          <div className="home_div">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="profilee-btn"
+            >
+              <FontAwesomeIcon icon={faHouse} className="home-icon" />
+            </button>
+          </div>
         </form>
       </div>
     </div>

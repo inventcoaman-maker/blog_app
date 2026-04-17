@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Add_Post.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHouse } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 
 function Add_post() {
   const navigate = useNavigate();
@@ -9,7 +12,7 @@ function Add_post() {
 
   const [category, setCategory] = useState([]);
   const [tag, setTag] = useState([]);
-  const [error, setError] = useState("");
+  // const [error, setError] = useState("");
   const [file, setFile] = useState(null);
   const [thumbnail, setThumbnail] = useState(null);
 
@@ -90,11 +93,20 @@ function Add_post() {
     });
 
     const data = await res.json();
+    console.log(data);
 
     if (res.ok) {
+      toast.success("Post created successfully");
       navigate("/");
     } else {
-      setError(data.error);
+      if (data.text) {
+        toast.error(data.text[0]);
+      } else if (data.title) {
+        toast.error(data.title[0]);
+      } else {
+        toast.error("title and text are required");
+      }
+      // toast.error(data.error || "Failed to create post");
     }
   };
 
@@ -103,7 +115,6 @@ function Add_post() {
       <div className="add-post-container">
         <div className="add-post-card">
           <h2>Create Post</h2>
-
           <div className="form-group">
             <label>Title</label>
             <input
@@ -114,7 +125,6 @@ function Add_post() {
               placeholder="Enter title"
             />
           </div>
-
           <div className="form-group">
             <label>Text</label>
             <textarea
@@ -124,7 +134,6 @@ function Add_post() {
               placeholder="Write your content..."
             />
           </div>
-
           <div className="form-group">
             <label>Category</label>
             <select name="category" onChange={handleChange}>
@@ -136,7 +145,6 @@ function Add_post() {
               ))}
             </select>
           </div>
-
           <div className="form-group">
             <label>Tags</label>
             <select name="tag" multiple onChange={handleChange}>
@@ -147,7 +155,6 @@ function Add_post() {
               ))}
             </select>
           </div>
-
           <div className="form-group">
             <label>Upload Image</label>
             <div className="file-input-wrapper">
@@ -162,7 +169,6 @@ function Add_post() {
             </div>
             {file && <div className="file-name">Selected: {file.name}</div>}
           </div>
-
           <div className="form-group">
             <label>Upload Thumbnail Image</label>
             <div className="file-input-wrapper">
@@ -179,7 +185,6 @@ function Add_post() {
               <div className="file-name">Selected: {thumbnail.name}</div>
             )}
           </div>
-
           <div className="form-group checkbox-group">
             <label className="checkbox-label">
               <input
@@ -191,10 +196,18 @@ function Add_post() {
               Private Post
             </label>
           </div>
-
-          {error ? <div className="error-message">{error}</div> : null}
-
           <button className="submit-btn">Create Post</button>
+          {/* <div className="">{error && toast.error(error)}</div> */}
+
+          <div className="home_div">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="profilee-btn"
+            >
+              <FontAwesomeIcon icon={faHouse} className="home-icon" />
+            </button>
+          </div>
         </div>
       </div>
     </form>

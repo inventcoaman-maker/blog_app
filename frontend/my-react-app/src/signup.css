@@ -27,6 +27,11 @@ body {
     font-weight: 600;
 }
 
+.post {
+    background: var(--card);
+    border: 1px solid var(--border);
+}
+
 .input-group {
     position: relative;
     margin-bottom: 25px;

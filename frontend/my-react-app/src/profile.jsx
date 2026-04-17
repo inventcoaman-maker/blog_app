@@ -4,6 +4,7 @@ import { Router, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { resolveImageUrl } from "./utils/imageUrl";
+import { toast } from "react-toastify";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -70,8 +71,9 @@ export default function Profile() {
       }));
       window.dispatchEvent(new Event("profileUpdated"));
       navigate("/");
+      toast.success("Profile updated successfully 🎉");
     } else {
-      setError(data.message || "Failed to update profile");
+      toast.error("Failed to update profile");
     }
   };
   return (
@@ -79,7 +81,6 @@ export default function Profile() {
       <div className="profile-card">
         <h2>Edit Profile</h2>
 
-        {/* PROFILE IMAGE */}
         <div className="profile-image">
           <img
             src={
@@ -91,10 +92,9 @@ export default function Profile() {
           />
         </div>
 
-        {/* FORM */}
         <form onSubmit={handleSubmit}>
-          {/* IMAGE INPUT */}
           <div className="form-group">
+            <p>Current image: {userData.image.split("/").pop()}</p>
             <label htmlFor="image">Profile Image</label>
 
             <input
@@ -105,7 +105,6 @@ export default function Profile() {
             />
           </div>
 
-          {/* FIRST NAME */}
           <div className="form-group">
             <label>First Name</label>
             <input
@@ -117,7 +116,6 @@ export default function Profile() {
             />
           </div>
 
-          {/* LAST NAME */}
           <div className="form-group">
             <label>Last Name</label>
             <input
@@ -129,13 +127,11 @@ export default function Profile() {
             />
           </div>
 
-          {/* EMAIL */}
           <div className="form-group">
             <label>Email</label>
             <input type="email" value={userData.email} disabled />
           </div>
 
-          {/* PHONE */}
           <div className="form-group">
             <label>Mobile Number</label>
             <input
@@ -148,24 +144,24 @@ export default function Profile() {
               inputMode="numeric"
             />
           </div>
+          {error && toast.error(error)}
 
-          {/* ERROR */}
-          {error && <div className="error-message">{error}</div>}
+          {/* {error && <div className="error-message">{toast.error(error)}</div>} */}
 
-          {/* SUBMIT */}
           <button type="submit" className="profile-btn">
             Update Profile
           </button>
         </form>
 
-        {/* HOME BUTTON */}
-        <button
-          type="button"
-          onClick={() => navigate("/home")}
-          className="profilee-btn"
-        >
-          <FontAwesomeIcon icon={faHouse} className="home-icon" />
-        </button>
+        <div className="home_div">
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="profilee-btn"
+          >
+            <FontAwesomeIcon icon={faHouse} className="home-icon" />
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -111,6 +111,11 @@
     font-size: 1.2rem;
 }
 
+.post {
+    background: var(--card);
+    border: 1px solid var(--border);
+}
+
 input[type="file"] {
     cursor: pointer;
     padding: 5px;
@@ -168,4 +173,10 @@ input[type="file"] {
     .add-post-card h2 {
         font-size: 1.75rem;
     }
+}
+
+.home_div {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
 }

@@ -241,9 +241,13 @@ class postCreate(APIView):
         # data={request.data.dict()}
         title=request.data.get('title')
         text=request.data.get('text')
-        if title.strip() and text.strip() == "":
+        if title.strip() == "":
             return Response(
-                {"error":"title and text field are required"},status=status.HTTP_400_BAD_REQUEST
+                {"error":"title  field are required"},status=status.HTTP_400_BAD_REQUEST
+            )
+        if text.strip() == "":
+            return Response(
+                {"error":"text  field are required"},status=status.HTTP_400_BAD_REQUEST
             )
         # if "category.id" in request.data:
         #     id=request.data["category"]
@@ -268,16 +272,21 @@ class postCreate(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 class currentUserPost(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self,request):
+    def get(self, request):
         try:
-          x=Post.objects.filter(author=request.user)
-          serailizer=postSerailizer(x,many=True)
-          return Response(serailizer.data,status=status.HTTP_200_OK)
+          user_posts = Post.objects.filter(author=request.user)
+          
+          serializer = postSerailizer(user_posts, many=True, context={"request": request})
+          return Response({
+              "posts": serializer.data,
+              
+          }, status=status.HTTP_200_OK)
+        
         except Exception as e:
             return Response({
                 "error": f"Something went wrong: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
-    
+
 class selfPostUpdate(APIView):
     permission_classes = [IsAuthenticated]
     def get(self,request,id):
@@ -285,9 +294,9 @@ class selfPostUpdate(APIView):
           x=Post.objects.filter(author=request.user)
           postId=get_object_or_404(x,id=id)
           print(postId)
-          serailizer=postSerailizer(postId)
+          serailizer=postSerailizer(postId,context={"request": request})
           return Response(serailizer.data,
-                  status=status.HTTP_200_OK)
+                  status=status.HTTP_200_OK)                                                                                                                                    
         except Exception as e:
             return Response({
                 "error": f"Something went wrong: {str(e)}"
@@ -313,6 +322,13 @@ class selfPostUpdate(APIView):
             return Response({
                 "error": f"Something went wrong: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+class selfPostDelete(APIView):
+    permission_classes = [IsAuthenticated]
+    def delete(self, request, id):
+        x = Post.objects.filter(author=request.user)
+        post = get_object_or_404(x, id=id)
+        post.delete()
+        return Response({"message": "deleted successfully"}, status=status.HTTP_200_OK)
     
 class allPost(APIView):
     def get(self, request):
@@ -321,12 +337,27 @@ class allPost(APIView):
             tag = request.query_params.get("tag")
             author = request.query_params.get("author")
             queryset = Post.objects.filter().order_by("-created_date")
-            print(queryset)            # Debug: print creation dates
-            for post in queryset[:5]:  # First 5 posts
-                print(f"{post.title}: {post.created_date}")
+            lst=[]
+            for i in queryset[:2]:
+                print(i)
+            print(lst)
+            # queryset = list[Post.objects.filter().order_by("-created_date").values()][:2]
+            # lst=[]
+            # for i in queryset:
+            #     print(i.id)
+            #     lst.append(i.id)
+            # # print(lst)
+
+            # print(queryset)
+
+            
+            # queryset=Post.objects.filter(pin_post__isnull=True).order_by("-created_date")
+            # print(queryset)            # Debug: print creation dates
+            # for post in queryset[:5]:  # First 5 posts
+            #     print(f"{post.title}: {post.created_date}")
             # today = timezone.now().date()
-            today_posts = queryset.filter(created_date__date=today)
-            print(f"Posts from today ({today}): {today_posts.count()}")            
+            # today_posts = queryset.filter(created_date__date=today)
+            # print(f"Posts from today ({today}): {today_posts.count()}")            
             if category:
                 queryset = queryset.filter(category__id=category)
             if tag:
@@ -334,19 +365,19 @@ class allPost(APIView):
             if author:
                 queryset = queryset.filter(author__id=author)
             if not request.user.is_authenticated:
-                queryset = queryset.filter(is_private=False)
+                queryset = queryset.filter(is_private=False ) | queryset.filter(pin_post=False)
             else:
                 queryset = queryset.filter(
                     is_private=False
                 ) | queryset.filter(
                     is_private=True, author=request.user
-                )
+                ) 
        
             
             paginator = CustomPagination()
             paginated = paginator.paginate_queryset(queryset, request)
             # print(paginated)
-            serializer = postSerailizer(paginated, many=True)
+            serializer = postSerailizer(paginated, many=True, context={"request": request})
             return paginator.get_paginated_response(serializer.data)
             
             
@@ -607,6 +638,21 @@ class profile(APIView):
         x=User.objects.get(id=request.user.id)
         print(x.phone)
         phone1=request.data.get('phone')
+        first_name=request.data.get('first_name')
+        last_name=request.data.get('last_name')
+        if first_name is not None and first_name.strip() == "":
+            return Response({
+                "status": 400,
+                "statusText": "Bad Request",
+                "message": "First name cannot be empty"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if last_name is not None and last_name.strip() == "":
+            return Response({
+                "status": 400,
+                "statusText": "Bad Request",
+                "message": "Last name cannot be empty"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         if phone1:
             phone1=phone1.strip()
             if(len(phone1)>10 or not rule.search(phone1)):
@@ -620,6 +666,7 @@ class profile(APIView):
                  "status": 400,
                     "statusText": "Bad Request",
                     "message": "Phone number already in use"},status=status.HTTP_400_BAD_REQUEST)
+        
         serializer=profileSerializer(x,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -633,7 +680,7 @@ class profile(APIView):
     
 class like(APIView):
        permission_classes=[IsAuthenticated]
-       def post(self, request, post_id):
+       def patch(self, request, post_id):
         post = get_object_or_404(Post,id=post_id)
         user=request.user
         if user in post.like.all():
@@ -648,3 +695,25 @@ class like(APIView):
             "like_count": post.like.count()
         })
 
+
+class pin_post(APIView):
+       permission_classes=[IsAuthenticated]
+       def patch(self, request, post_id):
+        post = get_object_or_404(Post,id=post_id)
+        pined_post_length=Post.objects.filter(pin_post=request.user).count()
+        print(pined_post_length)
+        user=request.user
+        if user in post.pin_post.all():
+            post.pin_post.remove(user)
+            pin_post=False
+        else:
+            if pined_post_length>=3:
+                return Response({
+                    "error": "You can only pin 3 posts."
+                }, status=status.HTTP_400_BAD_REQUEST)
+            post.pin_post.add(user)
+            pin_post=True
+
+        return Response({
+            "pin_post": pin_post,
+        })

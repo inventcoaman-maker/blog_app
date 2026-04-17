@@ -140,6 +140,7 @@
     color: #667eea;
     font-size: .8rem;
     margin-bottom: 8px;
+    cursor: pointer;
     font-weight: 600;
 }
 
@@ -162,6 +163,7 @@
     flex-wrap: wrap;
     gap: 6px;
     margin-bottom: 10px;
+    cursor: pointer;
 }
 
 .tag-chip {
@@ -197,6 +199,10 @@
     display: flex;
     justify-content: center;
     gap: 10px;
+}
+
+.post-author {
+    cursor: pointer;
 }
 
 .pagination-btn {
@@ -241,19 +247,23 @@
 
 .like_comment {
     display: flex;
-    gap: 16px;
     align-items: center;
-    padding: 14px 18px 18px;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 10px 16px;
     border-top: 1px solid #f3f4f6;
     margin-top: 12px;
 }
 
 .icon_group {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
+    gap: 8px;
+    text-align: left;
+}
+
+.like_comment .icon_group svg {
+    font-size: 18px;
 }
 
 .icon_group p {
@@ -264,7 +274,6 @@
 
 .icon_group svg {
     font-size: 20px;
-    cursor: pointer;
     transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
@@ -286,7 +295,19 @@
     color: #262626;
 }
 
+.post {
+    background: var(--card);
+    border: 1px solid var(--border);
+}
+
 /* red heart */
 .like_icon {
     color: red;
+}
+
+.edit_delete {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    align-items: center;
 }

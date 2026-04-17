@@ -3,16 +3,28 @@ import "./Header.css";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { resolveImageUrl } from "./utils/imageUrl";
+import { toast } from "react-toastify";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faToggleOn } from "@fortawesome/free-solid-svg-icons";
 
 function Header() {
   const navigate = useNavigate();
   const token = localStorage.getItem("access");
   const [image, setImage] = useState("");
+  const [clicked, setClicked] = useState(false);
+
+  const toggleChange = () => {
+    document.body.classList.toggle("dark-mode");
+    setClicked((prev) => !prev);
+  };
+
   const logout = () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     navigate("/login");
+    toast.success("Logged out successfully ");
   };
+
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("access");
@@ -36,6 +48,10 @@ function Header() {
       window.removeEventListener("profileUpdated", fetchUser);
     };
   }, []);
+  // const toggleChange = () => {
+  //   setDarkMode((prev) => !prev);
+  // };
+
   return (
     <header className="header">
       <div className="container">
@@ -69,6 +85,7 @@ function Header() {
               ) : (
                 <img
                   src={"https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                  alt="profile"
                   className="profile-avatar"
                 />
               )}
@@ -81,9 +98,20 @@ function Header() {
               <Link className="signup" to="/signup">
                 Signup
               </Link>
+              {/* <FontAwesomeIcon icon={faToggleOn} /> */}
             </>
           )}
         </div>
+        <div class="toggle-container">
+          <input
+            type="checkbox"
+            id="toggle"
+            onClick={toggleChange}
+            value={clicked}
+          />
+          <label for="toggle" class="toggle-btn"></label>
+        </div>
+        {/* {clicked ? alert : alert("Dark mode is off")} */}
       </div>
     </header>
   );

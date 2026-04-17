@@ -40,6 +40,7 @@ class postSerailizer(serializers.ModelSerializer):
     is_liked = serializers.SerializerMethodField()
     total_likes=serializers.SerializerMethodField()
     total_comments=serializers.SerializerMethodField()
+    pin_post=serializers.SerializerMethodField()
 
 
     class Meta:
@@ -49,6 +50,11 @@ class postSerailizer(serializers.ModelSerializer):
 
     def get_tag_names(self, obj):
         return [tag.name for tag in obj.tags.all()]
+    def get_pin_post(self,obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.pin_post.filter(id=request.user.id).exists()
+        return  False
     
     def get_is_liked(self, obj):
       request = self.context.get('request')

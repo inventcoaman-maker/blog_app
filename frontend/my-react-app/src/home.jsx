@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import { faComment as regularComment } from "@fortawesome/free-regular-svg-icons";
 import { resolveImageUrl } from "./utils/imageUrl";
+import { toast } from "react-toastify";
 
 function Home() {
   const [posts, setPost] = useState([]);
@@ -14,11 +15,12 @@ function Home() {
   const [category, setCategory] = useState([]);
   const [tag, setTag] = useState([]);
   const [authors, setAuthors] = useState([]);
+  const [refreshApi, setRefreshApi] = useState(false);
   // const [like,setLike]=useState(false)
   const [searchParams, setSearchParams] = useSearchParams();
   const token = localStorage.getItem("access");
   // const { id } = useParams();
-  console.log(authors);
+  console.log("gfffffffffffff", refreshApi);
 
   // tag.map((item, index) => console.log(item.id));
   // const new_arrr = [];
@@ -58,12 +60,14 @@ function Home() {
         if (res.status === 401) {
           localStorage.removeItem("access");
           localStorage.removeItem("refresh");
-          window.location.reload(); // auto logout
+          window.location.reload();
           return;
         }
         return res.json();
       })
       .then((data) => {
+        console.log(data.data.results);
+
         setPost(data.data.results);
         settPage(data.data.total_pages);
       });
@@ -73,7 +77,7 @@ function Home() {
     })
       .then((res) => res.json())
       .then((data) => setUser(data));
-  }, [searchParams]);
+  }, [searchParams, refreshApi]);
 
   let page_arr = [];
   for (let i = 1; i <= Page; i++) {
@@ -200,6 +204,21 @@ function Home() {
       return prev;
     });
   };
+  const handleDelete = async (id) => {
+    const res = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/selfPostDelete/${id}/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    if (res.ok) {
+      setRefreshApi((prev) => !prev);
+      toast.success("post deleted successfully ");
+    }
+  };
 
   return (
     <div className="home-container">
@@ -269,7 +288,6 @@ function Home() {
               ))}
             </select>
           </div>
-
           <div className="filter-group">
             <label className="filter-label">Tag</label>
             <select onChange={handleTagChange} className="filter-select">
@@ -281,7 +299,6 @@ function Home() {
               ))}
             </select>
           </div>
-
           <div className="filter-group">
             <label className="filter-label">Author</label>
             <select onChange={handleAuthorChange} className="filter-select">
@@ -299,7 +316,7 @@ function Home() {
       <div className="posts-section">
         <div className="posts-grid">
           {posts.map((post) =>
-            token || !post.is_private ? (
+            token || !post.is_private || post.pin_post ? (
               <div className="post-card" key={post.id}>
                 <div className="post-image-container">
                   {post.image ? (
@@ -350,12 +367,28 @@ function Home() {
 
                     <div className="right">
                       {user.email === post.email && (
-                        <Link
-                          to={`/post_edit/${post.id}`}
-                          className="edit-link"
-                        >
-                          ✏️ Edit
-                        </Link>
+                        <div className="edit_delete">
+                          <Link
+                            to={`/post_edit/${post.id}`}
+                            className="edit-link"
+                          >
+                            ✏️ Edit
+                          </Link>
+                          <div className="">
+                            <svg
+                              onClick={() => handleDelete(post.id)}
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              fill="currentColor"
+                              class="bi bi-trash"
+                              viewBox="0 0 16 16"
+                            >
+                              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                              <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                            </svg>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -378,6 +411,19 @@ function Home() {
                       <FontAwesomeIcon icon={regularComment} />
                       <p>{post.total_comments}</p>
                     </div>
+                    {post.pin_post && (
+                      <div className="">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          class="bi bi-pin"
+                          viewBox="0 0 16 16"
+                        >
+                          <path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.708V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354m1.58 1.408-.002-.001zm-.002-.001.002.001A.5.5 0 0 1 6 2v5a.5.5 0 1 1 0 0 1-1 0V2a.5.5 0 0 1 .146-.354z" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

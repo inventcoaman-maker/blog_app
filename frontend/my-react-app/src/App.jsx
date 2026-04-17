@@ -19,7 +19,7 @@ function App() {
   return (
     <>
       <Header />
-      <ToastContainer />
+      <ToastContainer autoClose={1000} theme="colored" />
       {/* <protected route */}
       <Routes>
         <Route path="/signup" element={<Signup />} />
