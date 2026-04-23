@@ -19,6 +19,15 @@
 
     <p>{{ post.text }}</p>
 
+    {% if request.user.is_authenticated %}
+    <div class="mb-3">
+      <a href="{% url 'save_post' pk=post.pk %}" class="btn btn-outline-info">
+        {% if request.user in post.saved_post.all %}Unsave Post{% else %}Save
+        Post{% endif %}
+      </a>
+    </div>
+    {% endif %}
+
     <hr />
 
     {% if request.user.is_authenticated %}

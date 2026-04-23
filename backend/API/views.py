@@ -1,23 +1,21 @@
-from urllib import request
-
-from django.shortcuts import render
+from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from .serializers  import *
+from .serializers import *
 from django.contrib.auth import authenticate
 import re
-from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticated
-from blog.models import Post
-from blog.models import Category,Tag
-from django.core.validators import RegexValidator
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from blog.models import Post, Category, Tag
 from .pagination import CustomPagination
 today = timezone.now().date()
+from django.core.cache import cache
+from .utils import genrate_otp
+from django.contrib.auth.models import BaseUserManager
+
 
 
 
@@ -150,6 +148,8 @@ class allUsers(APIView):
 class singleUser(APIView):
 
     def get(self,request):
+        if not request.user.is_authenticated:
+            return Response({}, status=status.HTTP_200_OK)
         # print(len())
         x=request.user
         # print(x)
@@ -336,51 +336,77 @@ class allPost(APIView):
             category = request.query_params.get("category")
             tag = request.query_params.get("tag")
             author = request.query_params.get("author")
-            queryset = Post.objects.filter().order_by("-created_date")
-            lst=[]
-            for i in queryset[:2]:
-                print(i)
-            print(lst)
-            # queryset = list[Post.objects.filter().order_by("-created_date").values()][:2]
-            # lst=[]
-            # for i in queryset:
-            #     print(i.id)
-            #     lst.append(i.id)
-            # # print(lst)
 
-            # print(queryset)
+            queryset = Post.objects.all().order_by("-created_date")
 
-            
-            # queryset=Post.objects.filter(pin_post__isnull=True).order_by("-created_date")
-            # print(queryset)            # Debug: print creation dates
-            # for post in queryset[:5]:  # First 5 posts
-            #     print(f"{post.title}: {post.created_date}")
-            # today = timezone.now().date()
-            # today_posts = queryset.filter(created_date__date=today)
-            # print(f"Posts from today ({today}): {today_posts.count()}")            
             if category:
                 queryset = queryset.filter(category__id=category)
+               
             if tag:
                 queryset = queryset.filter(tags__id=tag)
             if author:
                 queryset = queryset.filter(author__id=author)
-            if not request.user.is_authenticated:
-                queryset = queryset.filter(is_private=False ) | queryset.filter(pin_post=False)
-            else:
-                queryset = queryset.filter(
-                    is_private=False
-                ) | queryset.filter(
-                    is_private=True, author=request.user
-                ) 
-       
+                print(queryset)
+
             
+            if not request.user.is_authenticated:
+                queryset = queryset.filter(is_private=False)
+
+            else:
+                pined_post = Post.objects.filter(pin_post=request.user)
+
+                if pined_post.exists():
+                    pinned = Post.objects.filter(
+                        pin_post=request.user,
+                        is_private=False
+                    ) | Post.objects.filter(
+                        pin_post=request.user,
+                        is_private=True,
+                        author=request.user
+                    )
+
+                    others = Post.objects.exclude(
+                        pin_post=request.user
+                    ).filter(
+                        is_private=False
+                    ) | Post.objects.exclude(
+                        pin_post=request.user
+                    ).filter(
+                        is_private=True,
+                        author=request.user
+                    )
+
+                    pinned = pinned.order_by('-created_date')
+                    others = others.order_by('-created_date')
+
+                    if category:
+                        pinned = pinned.filter(category__id=category)
+                        others = others.filter(category__id=category)
+                    if tag:
+                        pinned = pinned.filter(tags__id=tag)
+                        others = others.filter(tags__id=tag)
+                    if author:
+                        pinned = pinned.filter(author__id=author)
+                        others = others.filter(author__id=author)
+
+                    queryset = list(pinned) + list(others)
+
+                else:
+                    queryset = queryset.filter(
+                        is_private=False
+                    ) | queryset.filter(
+                        is_private=True,
+                        author=request.user
+                    )
+
             paginator = CustomPagination()
             paginated = paginator.paginate_queryset(queryset, request)
-            # print(paginated)
-            serializer = postSerailizer(paginated, many=True, context={"request": request})
+
+            serializer = postSerailizer(
+                paginated, many=True, context={"request": request}
+            )
+
             return paginator.get_paginated_response(serializer.data)
-            
-            
 
         except Exception as e:
             return Response(
@@ -413,13 +439,13 @@ class category(APIView):
     def get(self,request):
         try:
            paginator = CustomPagination()
-           category = request.query_params.get("category")
-           posts = Category.objects.all()
-           if category:
-                posts = posts.filter(category__id=category)
+           tag_id = request.query_params.get("tag")
+           posts = Post.objects.all()
+           if tag_id:
+                posts = posts.filter(tags__id=tag_id)
            posts = posts.order_by("id").distinct()
            paginated=paginator.paginate_queryset(queryset=posts,request=request)
-           serailizer=categroyserializer(paginated,many=True)
+           serailizer=postSerailizer(paginated,many=True, context={"request": request})
            return paginator.get_paginated_response(serailizer.data)
         except Exception as e:
             return Response({"error": f"Something went wrong: {str(e)}"
@@ -473,13 +499,13 @@ class tag(APIView):
     def get(self,request):
         try:
            paginator = CustomPagination()
-           category = request.query_params.get("tag")
-           posts = Tag.objects.all()
-           if category:
-                posts = posts.filter(category__id=category)
+           tag_id = request.query_params.get("tag")
+           posts = Post.objects.all()
+           if tag_id:
+                posts = posts.filter(tags__id=tag_id)
            posts = posts.order_by("id").distinct()
            paginated=paginator.paginate_queryset(queryset=posts,request=request)
-           serailizer=tagserializer(paginated,many=True)
+           serailizer=postSerailizer(paginated,many=True, context={"request": request})
            return paginator.get_paginated_response(serailizer.data)
         except Exception as e:
             return Response({"error": f"Something went wrong: {str(e)}"
@@ -554,7 +580,8 @@ class singlePost(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self,request,id):
         x=get_object_or_404(Post,id=id)
-        print(x.comments.all())
+        print(x.tags.all())
+        # print(x.comments.all())
         # print(x.comments.all())
 
         serailizer=postSerailizer(x,context={"request": request})
@@ -697,23 +724,113 @@ class like(APIView):
 
 
 class pin_post(APIView):
+    #    add_pinned_lst=[]
+    #    remove_pinned_lst=[]
        permission_classes=[IsAuthenticated]
        def patch(self, request, post_id):
         post = get_object_or_404(Post,id=post_id)
         pined_post_length=Post.objects.filter(pin_post=request.user).count()
-        print(pined_post_length)
+        first_pined_post=Post.objects.filter(pin_post=request.user).first()
+        print(first_pined_post)
         user=request.user
         if user in post.pin_post.all():
             post.pin_post.remove(user)
             pin_post=False
+            # self.remove_pinned_lst.append(post_id)
         else:
             if pined_post_length>=3:
-                return Response({
-                    "error": "You can only pin 3 posts."
-                }, status=status.HTTP_400_BAD_REQUEST)
+                first_pined_post.pin_post.remove(user)
+                post.pin_post.add(user)
             post.pin_post.add(user)
+            # x=post.pin_post.all()
+            # for i in x:
+            #     print(i)
             pin_post=True
+            # print(first_pined_post)
+
+            # self.add_pinned_lst.append(post_id)/
+        # print(self.add_pinned_lst)
+        # print(self.remove_pinned_lst)
 
         return Response({
             "pin_post": pin_post,
+        })
+       
+
+class genrateOtp(APIView):
+    def post(self,request):
+
+        email = request.data.get('email')
+        if not email:
+            return Response({
+                "message":"email required"
+            },status=status.HTTP_400_BAD_REQUEST) 
+        otp = str(genrate_otp())
+        cache.set(email, otp, timeout=300)
+        print(f"OTP for {email}: {otp}")
+        return Response({"message": "OTP sent successfully"},status=200)
+    
+    
+class verifyOtp(APIView):
+    def post(self,request):
+        email=request.data.get("email")
+        otp_str=request.data.get("otp")
+        print(email,otp_str)
+        if not email or not otp_str:
+            return Response({"error":"email and otp are required"},status=400)
+        try:
+            otp = str(otp_str).strip()
+        except ValueError:
+            return Response({"error":"Invalid OTP format"},status=400)
+        stored_otp = cache.get(email)
+        print(stored_otp)
+        if not stored_otp:
+            return Response({"error":"otp expired"},status=400)
+        if stored_otp != otp:
+            return Response({"error":"otp not matched"},status=400)
+        cache.delete(email)
+        try:
+           user = User.objects.get(email=email)
+        except User.DoesNotExist:
+           return Response({"error": "User not found"}, status=404)
+        x= RefreshToken.for_user(user)
+        return Response({
+        "message": "Login successful",
+        "access": str(x.access_token),
+        "refresh": str(x),
+        })
+            
+
+
+class savedPost(APIView):
+     permission_classes=[IsAuthenticated]
+     def patch(self,request,post_id):
+        x=get_object_or_404(Post,id=post_id)
+        user=request.user
+        if user in x.saved_post.all():
+            x.saved_post.remove(user)
+            saved_post=False
+        else:
+            x.saved_post.add(user)
+            saved_post= True
+        # print(x.comments.all())
+        # print(x.comments.all())
+
+        return Response({
+            "saved_post": saved_post,
+            "saved_count": x.saved_post.count()
+        })
+
+class allSavedPost(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        all_saved_post=Post.objects.filter(saved_post=request.user)
+        print(all_saved_post)
+        serializer=postSerailizer(all_saved_post,many=True,context={"request": request})
+        return Response({
+            "status": 200,
+            "statusText": "ok",
+            "message": "Data fetched successfully",
+            "data":
+                serializer.data
         })

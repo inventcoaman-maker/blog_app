@@ -10,7 +10,12 @@ export function resolveImageUrl(imagePath) {
     return imagePath;
   }
 
-  return imagePath.startsWith("/")
-    ? `${baseUrl}${imagePath}`
-    : `${baseUrl}/${imagePath}`;
+  // Ensure imagePath starts with /media/
+  if (imagePath.startsWith("media/")) {
+    imagePath = `/${imagePath}`;
+  } else if (!imagePath.startsWith("/media/")) {
+    imagePath = `/media/${imagePath.startsWith("/") ? imagePath.slice(1) : imagePath}`;
+  }
+
+  return `${baseUrl}${imagePath}`;
 }

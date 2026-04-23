@@ -1,39 +1,12 @@
-import email
-from importlib.resources import files
-from multiprocessing import context
-from urllib import request
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from .models import Post, Category, Tag, Comment
-from django.shortcuts import render , get_object_or_404
-from django.http import HttpResponse
-from blog.models import Post
 from django.contrib.auth.models import User
-from django.utils import timezone
-from django.http import Http404
-
-from django.shortcuts import redirect
-from datetime import datetime
-from django.contrib.auth import logout
-from django.contrib.auth import get_user_model
+from django.contrib.auth import logout, get_user_model, authenticate, login
 from django.contrib import messages
 import re
-from .models import Category,Tag
-from django.db.models import Q
-from .models import Comment
-
-from blog.models import Post
-from django.shortcuts import render, get_object_or_404, redirect
-from django.utils import timezone
-from .models import Post, Category, Tag, Comment
-
-# from .form import updateProfile
-
 from django.contrib.auth.decorators import login_required
 from .form import PostForm
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
 
 
 
@@ -631,5 +604,30 @@ def Change_Password(request):
 
 
 
+@login_required
+def save_post(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    user = request.user
+    if user in post.saved_post.all():
+        post.saved_post.remove(user)
+        messages.info(request, "Post unsaved.")
+    else:
+        post.saved_post.add(user)
+        messages.success(request, "Post saved.")
+    return redirect(request.META.get('HTTP_REFERER', 'homeApp'))
+
+@login_required
+def saved_posts(request):
+    saved_posts = Post.objects.filter(saved_post=request.user)
+    categories = Category.objects.all()
+    tags = Tag.objects.all()
+    authors = User.objects.all()
+    context = {
+        "posts": saved_posts,
+        "categories": categories,
+        "tags": tags,
+        "authors": authors,
+    }
+    return render(request, 'blog/saved_posts.html', context)
     
     return render(request,"blog/changePassword.html")

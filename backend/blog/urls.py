@@ -13,6 +13,8 @@ urlpatterns = [
     path("logout/",views.logout_view,name="logout"),
     path("profile/",views.profile_view,name="profile"),
     path("Change_Password/",views.Change_Password,name="Change_Password"),
+    path("post/<int:pk>/save/", views.save_post, name='save_post'),
+    path("saved_posts/", views.saved_posts, name='saved_posts'),
 
 
 

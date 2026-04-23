@@ -26,18 +26,21 @@ export default function Post_Edit() {
   console.log(tags);
 
   useEffect(() => {
+    // fetch(api.get(`category/`))
     fetch(`${import.meta.env.VITE_API_URL}/api/category/`)
       .then((res) => res.json())
       .then((data) => setCategory(data.data.results));
   }, []);
 
   useEffect(() => {
+    // fetch(api.get(`Tag/`))
     fetch(`${import.meta.env.VITE_API_URL}/api/Tag/`)
       .then((res) => res.json())
       .then((data) => setTags(data.data.results));
   }, []);
 
   useEffect(() => {
+    // fetch(api.get(`singlePost/${id}/`))
     fetch(`${import.meta.env.VITE_API_URL}/api/singlePost/${id}/`)
       .then((res) => res.json())
       .then((data) => {
@@ -50,6 +53,8 @@ export default function Post_Edit() {
         });
       });
   }, [id, category]);
+
+  // useEffect(() => console.log(api), []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

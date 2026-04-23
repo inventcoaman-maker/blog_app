@@ -30,6 +30,10 @@ urlpatterns=[
     path("profile/",views.profile.as_view()),
     path("like/<int:post_id>/",views.like.as_view()),
     path("pin_post/<int:post_id>/",views.pin_post.as_view()),
+    path("genrateOtp/",views.genrateOtp.as_view()),
+    path("verifyOtp/",views.verifyOtp.as_view()),
+    path("savedPost/<int:post_id>/",views.savedPost.as_view()),
+    path("allSavedPost/",views.allSavedPost.as_view()),
 
 
     # path("bycategoryTag/",views.bycategoryTag.as_view())

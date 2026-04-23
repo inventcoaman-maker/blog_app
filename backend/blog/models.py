@@ -1,11 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.core.validators import RegexValidator
-
 from django.utils import timezone
-from django.contrib.auth.models import AbstractUser,BaseUserManager
-
-from django.core.validators import RegexValidator
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 phone_validator = RegexValidator(
     regex=r'^\d{10}$',
@@ -93,6 +90,7 @@ class Post(models.Model):
 
     is_private = models.BooleanField(default=False)
     like = models.ManyToManyField(User, related_name='blog_posts', blank=True)
+    saved_post=models.ManyToManyField(User, related_name='blog_savedPosts', blank=True)
     pin_post= models.ManyToManyField(User,blank=True,related_name='blog_posts_pin_post')
 
     def publish(self):
@@ -137,6 +135,9 @@ class Reply(models.Model):
     
     def __str__(self):
         return f"{self.text}"
+
+
+
     
 
 

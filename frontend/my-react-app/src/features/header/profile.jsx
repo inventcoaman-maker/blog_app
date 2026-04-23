@@ -3,7 +3,7 @@ import "./profile.css";
 import { Router, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
-import { resolveImageUrl } from "./utils/imageUrl";
+import { resolveImageUrl } from "../../utils/imageUrl";
 import { toast } from "react-toastify";
 
 export default function Profile() {
@@ -73,7 +73,7 @@ export default function Profile() {
       navigate("/");
       toast.success("Profile updated successfully 🎉");
     } else {
-      toast.error("Failed to update profile");
+      toast.error(data.message);
     }
   };
   return (

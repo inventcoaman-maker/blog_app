@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from blog.models import *
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 
@@ -41,6 +40,8 @@ class postSerailizer(serializers.ModelSerializer):
     total_likes=serializers.SerializerMethodField()
     total_comments=serializers.SerializerMethodField()
     pin_post=serializers.SerializerMethodField()
+    saved_post=serializers.SerializerMethodField()
+    total_savedPost=serializers.SerializerMethodField()
 
 
     class Meta:
@@ -50,11 +51,18 @@ class postSerailizer(serializers.ModelSerializer):
 
     def get_tag_names(self, obj):
         return [tag.name for tag in obj.tags.all()]
+    
     def get_pin_post(self,obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return obj.pin_post.filter(id=request.user.id).exists()
         return  False
+    def get_saved_post(self,obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.saved_post.filter(id=request.user.id).exists()
+        return  False
+
     
     def get_is_liked(self, obj):
       request = self.context.get('request')
@@ -63,10 +71,13 @@ class postSerailizer(serializers.ModelSerializer):
       return False
     
     def get_total_likes(self,obj):
+
         return obj.like.count()
     
     def get_total_comments(self,obj):
         return obj.comments.count()
+    def get_total_savedPost(self,obj):
+        return obj.saved_post.count()
         
 
 

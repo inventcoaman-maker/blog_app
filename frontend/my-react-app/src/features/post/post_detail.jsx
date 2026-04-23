@@ -4,8 +4,11 @@ import "./post_detail.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart as solidHeart } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as regularHeart } from "@fortawesome/free-regular-svg-icons";
+import { faBookmark as faBookmarkRegular } from "@fortawesome/free-regular-svg-icons";
+import { faBookmark } from "@fortawesome/free-solid-svg-icons";
+
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
-import { resolveImageUrl } from "./utils/imageUrl";
+import { resolveImageUrl } from "../../utils/imageUrl";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -22,6 +25,9 @@ export default function Post_detail() {
   const [refreshApi, setRefreshApi] = useState(false);
   const [pin, setPin] = useState(false);
   const [totalPinPost, setTotalPinPost] = useState([]);
+  const [error, setError] = useState("");
+  const [savedPost, setSavedPost] = useState(false);
+
   const navigate = useNavigate();
   // const [likeToggle, setLikeToggle] = useState(false);
   // console.log(comment);
@@ -39,13 +45,26 @@ export default function Post_detail() {
     fetch(`${import.meta.env.VITE_API_URL}/api/singlePost/${id}/`, {
       headers,
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
         setPost(data.data);
+        console.log(data.data);
+
         setPin(data.data.pin_post);
+        setSavedPost(data.data.saved_post);
+        setError("");
+      })
+      .catch((err) => {
+        console.error("Failed to fetch post:", err);
+        setError("Post not found or failed to load.");
+        setPost(null);
       });
-    // .then((data) => setLike(data.data.is_liked));
-  }, [id, token]);
+  }, [id]);
 
   const handleComment = (e) => {
     setCommentText(e.target.value);
@@ -159,6 +178,7 @@ export default function Post_detail() {
   useEffect(() => {
     if (post) {
       setLike(post.is_liked);
+      setSavedPost(post.saved_post);
     }
   }, [post]);
 
@@ -222,6 +242,7 @@ export default function Post_detail() {
     //   toast.error("You can only pin up to 3 posts. Please unpin another post before pinning this one.");
     // }
   };
+  console.log(post);
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${token}` };
@@ -247,21 +268,57 @@ export default function Post_detail() {
   // const handleLikeToggle = () => {
   //   setLikeToggle((prev) => !prev);
   // };
+  const handleSavedPost = async (id) => {
+    const url = `${import.meta.env.VITE_API_URL}/api/savedPost/${id}/`;
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await res.json();
+    setSavedPost(data.saved_post);
+    if (res.ok) {
+      toast.success(data.saved_post ? "Post saved" : "Post unsaved");
+    } else {
+      toast.error(data.error);
+    }
+  };
 
   return (
     <>
       <div className="post-container">
         <div className="post-grid">
           <div className="post-card">
-            <h1 className="post-title">{post.title}</h1>
+            <div className="title_saved">
+              <h1 className="post-title">{post.title}</h1>
+              {/* {savedPost ? (
+                <FontAwesomeIcon
+                  onClick={handleSavedPost(post.id)}
+                  style={{ cursor: "pointer" }}
+                  icon={faBookmark}
+                />
+              ) : (
+                <FontAwesomeIcon
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleSavedPost(post.id)}
+                  icon={faBookmarkRegular}
+                />
+              )} */}
+              <FontAwesomeIcon
+                style={{ cursor: "pointer" }}
+                onClick={() => handleSavedPost(post.id)}
+                icon={savedPost ? faBookmark : faBookmarkRegular}
+              />
+            </div>
 
-            {post.thumbnail_image ? (
+            {post.thumbnail_image && (
               <img
                 src={resolveImageUrl(post.thumbnail_image)}
                 alt="Post"
                 className="post-image"
               />
-            ) : null}
+            )}
 
             <div className="post-meta">
               <p>
@@ -271,6 +328,7 @@ export default function Post_detail() {
               <p>
                 <b>Tags:</b>
               </p>
+
               <div className="tags">
                 {post.tag_names?.map((tag, i) => (
                   <span key={i} className="tag">
@@ -299,7 +357,7 @@ export default function Post_detail() {
                 {comment.map((value) => (
                   <div key={value.id} className="comment-item">
                     <div>
-                      {value.text}{" "}
+                      {value.text}
                       <button
                         onClick={() => handleReply(value.id)}
                         type="button"
@@ -316,7 +374,8 @@ export default function Post_detail() {
                         </div>
                       ) : null,
                     )}
-                    {replyInput === value.id ? (
+
+                    {replyInput === value.id && (
                       <div className="reply-box">
                         <input
                           value={replyText[value.id] || ""}
@@ -331,16 +390,17 @@ export default function Post_detail() {
                           Reply
                         </button>
                       </div>
-                    ) : null}
+                    )}
                   </div>
                 ))}
+
                 <FontAwesomeIcon
                   onClick={handleLike}
                   icon={like ? solidHeart : regularHeart}
+                  className={`like-icon ${like ? "liked" : ""}`}
                   style={{
                     cursor: "pointer",
                     fontSize: "26px",
-                    color: like ? "red" : "black",
                     transition: "all 0.2s ease",
                     marginTop: "10px",
                     transform: like ? "scale(1.2)" : "scale(1)",
@@ -364,50 +424,33 @@ export default function Post_detail() {
                   <Link to={`/post_edit/${post.id}`} className="edit-link">
                     ✏️ Edit
                   </Link>
-                  <div className="">
+
+                  <svg
+                    onClick={() => handleDelete(post.id)}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    style={{ cursor: "pointer" }}
+                    class="bi bi-trash"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                  </svg>
+                  {token && (
                     <svg
-                      onClick={() => handleDelete(post.id)}
+                      onClick={handlePin}
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
                       height="16"
-                      cursor="pointer"
                       fill="currentColor"
-                      class="bi bi-trash"
+                      style={{ cursor: "pointer" }}
+                      className="bi bi-pin pin-icon"
                       viewBox="0 0 16 16"
                     >
-                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
-                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                      <path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.708V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354" />
                     </svg>
-                  </div>
-                  {token && (
-                    <div className="">
-                      {pin ? (
-                        <svg
-                          onClick={handlePin}
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          class="bi bi-pin"
-                          viewBox="0 0 16 16"
-                          cursor="pointer"
-                        >
-                          <path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.708V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354m1.58 1.408-.002-.001zm-.002-.001.002.001A.5.5 0 0 1 6 2v5a.5.5 0 1 1 0 0 1-1 0V2a.5.5 0 0 1 .146-.354z" />
-                        </svg>
-                      ) : (
-                        <svg
-                          onClick={handlePin}
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          fill="currentColor"
-                          cursor="pointer"
-                          class="bi bi-pin"
-                          viewBox="0 0 16 16"
-                        >
-                          <path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.708V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354m1.58 1.408-.002-.001zm-.002-.001.002.001A.5.5 0 0 1 6 2v5a.5.5 0 0 1-.276.447h-.002l-.012.007-.054.03a5 5 0 0 0-.827.58c-.318.278-.585.596-.725.936h7.792c-.14-.34-.407-.658-.725-.936a5 5 0 0 0-.881-.61l-.012-.006h-.002A.5.5 0 0 1 10 7V2a.5.5 0 0 1 .295-.458 1.8 1.8 0 0 0 .351-.271c.08-.08.155-.17.214-.271H5.14q.091.15.214.271a1.8 1.8 0 0 0 .37.282" />
-                        </svg>
-                      )}
-                    </div>
                   )}
                 </>
               )}

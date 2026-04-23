@@ -32,7 +32,7 @@ DEBUG = True
 # domain = os.getenv('PROJECT_DOMAIN')
 # ALLOWED_HOSTS = [f"{domain}.glitch.me"] if domain else []
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 
