@@ -7,6 +7,7 @@ import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { resolveImageUrl } from "../../utils/imageUrl";
 import { toast } from "react-toastify";
 import { UserContext } from "../context/context.jsx";
+import { updateProfile } from "../../api/api.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -67,37 +68,30 @@ export default function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("first_name", userData.first_name);
-    formData.append("last_name", userData.last_name);
-    formData.append("phone", userData.phone);
-    if (image) formData.append("image", image);
-
-    const token = localStorage.getItem("access");
     try {
-      const response = await axios.put(`${API_URL}/api/profile/`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const profileData = {
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        phone: userData.phone,
+        image: image,
+      };
+
+      const response = await updateProfile(profileData);
+
       setUserData((prev) => ({
         ...prev,
-        image: response.data.data?.image || prev.image,
+        image: response.data?.image || prev.image,
       }));
-      const data = response.data;
-      console.log(data);
 
-      navigate("/");
       fetchUser();
-
-      toast.success(data.message);
+      toast.success(response.message || "Profile updated successfully");
+      navigate("/");
     } catch (error) {
       const errorMsg = error.response?.data?.error || "Something went wrong";
-
       toast.error(errorMsg);
     }
   };
+
   return (
     <div className="profile-container">
       <div className="profile-card">
