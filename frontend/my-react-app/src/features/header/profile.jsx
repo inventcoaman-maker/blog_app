@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { resolveImageUrl } from "../../utils/imageUrl";
 import { toast } from "react-toastify";
-import { UserContext } from "../context/context.jsx";
+import { UserContext } from "../context/authContext.jsx";
 import { updateProfile } from "../../api/api.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";

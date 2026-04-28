@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./post_detail.css";
 import axios from "axios";
@@ -12,13 +12,14 @@ import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { resolveImageUrl } from "../../utils/imageUrl";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { UserContext } from "../context/authContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function Post_detail() {
   const { id } = useParams();
   const [post, setPost] = useState({});
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
   const [comment, setComment] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [reply, setReply] = useState([]);
@@ -30,6 +31,7 @@ export default function Post_detail() {
   const [totalPinPost, setTotalPinPost] = useState([]);
   const [error, setError] = useState("");
   const [savedPost, setSavedPost] = useState(false);
+  const { user } = useContext(UserContext);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("access");
@@ -78,20 +80,20 @@ export default function Post_detail() {
     fetchReplies();
   }, [id, refreshApi]);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!token) return;
-      try {
-        const response = await axios.get(`${API_URL}/api/singleUser/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(response.data);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    fetchUser();
-  }, [token]);
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     if (!token) return;
+  //     try {
+  //       const response = await axios.get(`${API_URL}/api/singleUser/`, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       setUser(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching user:", error);
+  //     }
+  //   };
+  //   fetchUser();
+  // }, [token]);
 
   useEffect(() => {
     const fetchUserPosts = async () => {

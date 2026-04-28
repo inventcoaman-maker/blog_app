@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { generateOtp, verifyOtp } from "../../api/api";
-import { UserContext } from "../context/context";
+import { UserContext } from "../context/authContext.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 

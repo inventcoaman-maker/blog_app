@@ -9,7 +9,7 @@ import { faBars, faMoon, faBookmark } from "@fortawesome/free-solid-svg-icons";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faHistory } from "@fortawesome/free-solid-svg-icons";
 import Skeleton from "@mui/material/Skeleton";
-import { UserContext } from "../context/context.jsx";
+import { UserContext } from "../context/authContext.jsx";
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 function Header() {

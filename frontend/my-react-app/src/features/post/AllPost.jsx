@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import PostSkeleton from "../post/PostSkeleton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 import { toast } from "react-toastify";
 import { Link, useSearchParams, useParams } from "react-router-dom";
+import { UserContext } from "../context/authContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -19,8 +20,9 @@ export default function AllPost() {
   const [posts, setPosts] = useState([]);
   const token = localStorage.getItem("access");
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState({});
+  // const [user, setUser] = useState({});
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -37,20 +39,20 @@ export default function AllPost() {
     fetchPosts();
   }, [token]);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!token) return;
-      try {
-        const response = await axios.get(`${API_URL}/api/singleUser/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(response.data);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    fetchUser();
-  }, [token]);
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     if (!token) return;
+  //     try {
+  //       const response = await axios.get(`${API_URL}/api/singleUser/`, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       setUser(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching user:", error);
+  //     }
+  //   };
+  //   fetchUser();
+  // }, [token]);
 
   useEffect(() => {
     const time = setTimeout(() => {
@@ -171,7 +173,7 @@ export default function AllPost() {
                       </div>
 
                       <div className="right">
-                        {user.email === post.email && (
+                        {user?.email === post.email && (
                           <div className="edit_delete">
                             <Link
                               to={`/post_edit/${post.id}`}
