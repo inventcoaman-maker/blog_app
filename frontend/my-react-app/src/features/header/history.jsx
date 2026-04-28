@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 import "./history.css";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+import { activity, historyDelete } from "../../api/api.js";
 
 export default function History() {
   const [history, setHistory] = useState([]);
@@ -16,10 +14,8 @@ export default function History() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/history/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setHistory(res.data.data);
+        const res = await activity();
+        setHistory(res.data);
       } catch (error) {
         console.error(error);
       }
@@ -40,12 +36,7 @@ export default function History() {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${API_URL}/api/historyDelete/`, {
-        data: { ids: selectedIds },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await historyDelete();
 
       setHistory((prev) =>
         prev.filter((item) => !selectedIds.includes(item.id)),
