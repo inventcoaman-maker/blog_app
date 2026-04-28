@@ -74,9 +74,11 @@ export const generateOtp = async (email) => {
 // Verify OTP
 export const verifyOtp = async (otpData) => {
   const response = await api.post("/verifyOtp/", otpData);
-  if (response.data.access_token) {
-    localStorage.setItem("access", response.data.access_token);
-    localStorage.setItem("refresh", response.data.refresh_token);
+  // console.log("FULL RESPONSE:", response.data);
+
+  if (response.data.access) {
+    localStorage.setItem("access", response.data.access);
+    localStorage.setItem("refresh", response.data.refresh);
   }
   return response.data;
 };
@@ -132,6 +134,7 @@ export const getProfile = async () => {
 // Update profile
 export const updateProfile = async (profileData) => {
   const formData = new FormData();
+  const token = localStorage.getItem("access");
   Object.keys(profileData).forEach((key) => {
     if (profileData[key]) {
       formData.append(key, profileData[key]);
@@ -139,6 +142,7 @@ export const updateProfile = async (profileData) => {
   });
   const response = await api.put("/profile/", formData, {
     headers: {
+      Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data",
     },
   });

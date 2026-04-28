@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { EyeIcon } from "@primer/octicons-react";
 import { EyeClosedIcon } from "@primer/octicons-react";
+import { changePassword } from "../../api/api";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -30,7 +31,7 @@ export default function ChangePassword() {
     e.preventDefault();
     const token = localStorage.getItem("access");
     try {
-      await axios.patch(`${API_URL}/api/changePassword/`, currentPass, {
+      await changePassword(currentPass, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -112,7 +113,6 @@ export default function ChangePassword() {
                 )}
               </div>
             </div>
-            {/* {error && toast.error(error)} */}
             <button className="password-btn">Change Password</button>
             <div className="home_div">
               <button

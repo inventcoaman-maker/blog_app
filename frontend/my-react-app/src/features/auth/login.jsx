@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { generateOtp, verifyOtp } from "../../api/api";
+import { UserContext } from "../context/context";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 function Login() {
   // const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const { user, fetchUser } = useContext(UserContext);
+
   const navigate = useNavigate();
   // "http://127.0.0.1:8000/api/login/";
   const [inputValue, setInputValue] = useState({
@@ -36,10 +40,8 @@ function Login() {
     e.preventDefault();
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/genrateOtp/`,
-        inputValue,
-      );
+      const response = await generateOtp(inputValue.email);
+
       console.log(response.data);
       localStorage.setItem("email", inputValue.email);
       setShowOtpInput((prev) => !prev);
@@ -50,19 +52,17 @@ function Login() {
 
   const VerifyOtp = async (e) => {
     e.preventDefault();
+    const email = localStorage.getItem("email");
+    if (!email) {
+      return toast.error("Email not found. Please try again.");
+    }
     try {
-      const response = await axios.post(`${API_URL}/api/verifyOtp/`, {
-        email: localStorage.getItem("email"),
-        otp: otp,
-      });
-      console.log(response.data);
-      localStorage.setItem("access", response.data.access);
-      localStorage.setItem("refresh", response.data.refresh);
+      await verifyOtp({ email, otp });
+      await fetchUser();
       navigate("/");
       toast.success("Login successful 🎉");
     } catch (error) {
       toast.error(error.response?.data?.error || "Something went wrong");
-      console.log(localStorage.getItem("email"), otp);
     }
   };
   // const handleSuccess = async (res) => {

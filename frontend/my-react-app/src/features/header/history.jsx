@@ -24,13 +24,9 @@ export default function History() {
     fetchHistory();
   }, []);
 
-  // 🔹 Handle checkbox
   const handleCheckbox = (id) => {
-    setSelectedIds(
-      (prev) =>
-        prev.includes(id)
-          ? prev.filter((item) => item !== id) // remove
-          : [...prev, id], // add
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 

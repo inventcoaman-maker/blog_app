@@ -10,7 +10,7 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 import { faHistory } from "@fortawesome/free-solid-svg-icons";
 import Skeleton from "@mui/material/Skeleton";
 import { UserContext } from "../context/context.jsx";
-import { logout as logoutApi } from "../../api/api.js";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 function Header() {
   const navigate = useNavigate();
@@ -158,7 +158,7 @@ function Header() {
                 <img
                   src={
                     user?.image
-                      ? resolveImageUrl(user.image)
+                      ? resolveImageUrl(user?.image)
                       : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                   }
                   alt="profile"
