@@ -1,29 +1,29 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Add_Post.css";
+import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 function Add_post() {
   const navigate = useNavigate();
   const token = localStorage.getItem("access");
-  console.log(token);
 
   const [category, setCategory] = useState([]);
   const [tag, setTag] = useState([]);
-  // const [error, setError] = useState("");
   const [file, setFile] = useState(null);
   const [thumbnail, setThumbnail] = useState(null);
 
   const [values, setValue] = useState({
     title: "",
     text: "",
-    category: "",
+    category: null,
     tags: [],
     is_private: false,
   });
-  console.log();
 
   const handleChange = (e) => {
     if (e.target.multiple) {
@@ -57,13 +57,19 @@ function Add_post() {
   };
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/category/`)
-      .then((res) => res.json())
-      .then((data) => setCategory(data.data.results));
-
-    fetch(`${import.meta.env.VITE_API_URL}/api/Tag/`)
-      .then((res) => res.json())
-      .then((data) => setTag(data.data.results));
+    const fetchData = async () => {
+      try {
+        const [categoryRes, tagRes] = await Promise.all([
+          axios.get(`${API_URL}/api/category/`),
+          axios.get(`${API_URL}/api/Tag/`),
+        ]);
+        setCategory(categoryRes.data.data.results);
+        setTag(tagRes.data.data.results);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -73,7 +79,7 @@ function Add_post() {
 
     formData.append("title", values.title);
     formData.append("text", values.text);
-    formData.append("category", values.category);
+    formData.append("category", values.category || "");
 
     values.tags.forEach((t) => {
       formData.append("tags", t);
@@ -82,31 +88,40 @@ function Add_post() {
     if (thumbnail) formData.append("thumbnail_image", thumbnail);
     formData.append("is_private", values.is_private);
 
-    console.log([...formData]);
-
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/postCreate/`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    const data = await res.json();
-    console.log(data);
-
-    if (res.ok) {
+    try {
+      await axios.post(`${API_URL}/api/postCreate/`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
       toast.success("Post created successfully");
       navigate("/");
-    } else {
-      if (data.text) {
-        toast.error(data.text[0]);
-      } else if (data.title) {
-        toast.error(data.title[0]);
-      } else {
-        toast.error("title and text are required");
+    } catch (error) {
+      const data = error.response?.data;
+      console.error("Post creation error:", data);
+      
+      // Build error message from backend response
+      let errorMessage = "Failed to create post";
+      
+      if (data) {
+        // Handle nested error objects
+        if (data.error) {
+          errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+        } else if (data.title) {
+          errorMessage = Array.isArray(data.title) ? data.title.join(', ') : data.title;
+        } else if (data.text) {
+          errorMessage = Array.isArray(data.text) ? data.text.join(', ') : data.text;
+        } else if (typeof data === 'string') {
+          errorMessage = data;
+        } else {
+          // Convert any remaining object to string
+          errorMessage = JSON.stringify(data);
+        }
       }
-      // toast.error(data.error || "Failed to create post");
+      
+      toast.error(errorMessage);
+      return; // Stop execution - don't navigate
     }
   };
 
@@ -136,7 +151,11 @@ function Add_post() {
           </div>
           <div className="form-group">
             <label>Category</label>
-            <select name="category" onChange={handleChange}>
+            <select
+              name="category"
+              onChange={handleChange}
+              value={values.category || ""}
+            >
               <option value="">Select Category</option>
               {category.map((value) => (
                 <option key={value.id} value={value.id}>

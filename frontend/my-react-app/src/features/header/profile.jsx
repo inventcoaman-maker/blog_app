@@ -1,14 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import "./profile.css";
-import { Router, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { data, Router, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { resolveImageUrl } from "../../utils/imageUrl";
 import { toast } from "react-toastify";
+import { UserContext } from "../context/context.jsx";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function Profile() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const { user, fetchUser } = useContext(UserContext);
 
   const [userData, setUserData] = useState({
     first_name: "",
@@ -19,27 +24,39 @@ export default function Profile() {
   });
   const [image, setImage] = useState(null);
 
-  // const token = localStorage.getItem("access");
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     const token = localStorage.getItem("access");
+  //     try {
+  //       const response = await axios.get(`${API_URL}/api/singleUser/`, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       setUserData({
+  //         first_name: response.data.first_name || "",
+  //         last_name: response.data.last_name || "",
+  //         email: response.data.email || "",
+  //         phone: response.data.phone || "",
+  //         image: response.data.image || "",
+  //       });
+  //     } catch (error) {
+  //       console.error("Error fetching user:", error);
+  //     }
+  //   };
+  //   fetchUser();
+  // }, []);
 
-  // const token = localStorage.getItem("access")
   useEffect(() => {
-    const token = localStorage.getItem("access");
-    fetch(`${import.meta.env.VITE_API_URL}/api/singleUser/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) =>
-        setUserData({
-          first_name: data.first_name || "",
-          last_name: data.last_name || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          image: data.image || "",
-        }),
-      );
-  }, []);
+    if (user) {
+      setUserData({
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        image: user.image || "",
+      });
+    }
+  }, [user]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUserData((prev) => ({
@@ -55,25 +72,30 @@ export default function Profile() {
     formData.append("last_name", userData.last_name);
     formData.append("phone", userData.phone);
     if (image) formData.append("image", image);
+
     const token = localStorage.getItem("access");
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-    const data = await res.json();
-    if (res.ok) {
+    try {
+      const response = await axios.put(`${API_URL}/api/profile/`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
       setUserData((prev) => ({
         ...prev,
-        image: data.data?.image || prev.image,
+        image: response.data.data?.image || prev.image,
       }));
-      window.dispatchEvent(new Event("profileUpdated"));
+      const data = response.data;
+      console.log(data);
+
       navigate("/");
-      toast.success("Profile updated successfully 🎉");
-    } else {
-      toast.error(data.message);
+      fetchUser();
+
+      toast.success(data.message);
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || "Something went wrong";
+
+      toast.error(errorMsg);
     }
   };
   return (

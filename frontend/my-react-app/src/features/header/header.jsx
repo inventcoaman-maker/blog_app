@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import "./Header.css";
+import axios from "axios";
 
 import { Link, useNavigate } from "react-router-dom";
 import { resolveImageUrl } from "../../utils/imageUrl";
@@ -7,62 +8,84 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { faBars, faMoon, faBookmark } from "@fortawesome/free-solid-svg-icons";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faHistory } from "@fortawesome/free-solid-svg-icons";
+import Skeleton from "@mui/material/Skeleton";
+import { UserContext } from "../context/context.jsx";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 function Header() {
   const navigate = useNavigate();
   const token = localStorage.getItem("access");
-  const [image, setImage] = useState("");
   const [darkMode, setDarkMode] = useState(false);
   const [userToken, setUserToken] = useState(localStorage.getItem("access"));
   const [openMenu, closeMenu] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { user } = useContext(UserContext);
+  console.log(user?.image);
 
+  // console.log(image);
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia?.(
+    const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)",
-    )?.matches;
+    ).matches;
+
     const isDark = savedTheme ? savedTheme === "dark" : prefersDark;
 
     setDarkMode(isDark);
     document.body.classList.toggle("dark-mode", isDark);
+  }, []);
+  // const token = localStorage.getItem("access");
 
-    const fetchUser = async () => {
-      const token = localStorage.getItem("access");
-      if (!token) return;
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/singleUser/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setImage(data.image || "");
-        }
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     try {
+  //       const res = await fetch(`${API_URL}/api/singleUser/`, {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
 
-    fetchUser();
-    window.addEventListener("profileUpdated", fetchUser);
-    window.addEventListener("authChange", fetchUser);
-    const handleStorageChange = () => {
-      setUserToken(localStorage.getItem("access"));
-    };
-    window.addEventListener("storage", handleStorageChange);
-    return () => {
-      window.removeEventListener("profileUpdated", fetchUser);
-      window.removeEventListener("authChange", fetchUser);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [userToken]);
-  useEffect(() => {
-    image;
-  }, [userToken]);
+  //       if (!res.ok) {
+  //         toast.error("API failed");
+  //       }
+
+  //       const data = await res.json();
+  //       setImage(data.data.image || null);
+  //     } catch (error) {
+  //       toast.error("Failed to load profile");
+  //       console.error(error);
+  //     }
+  //   };
+
+  //   if (token) {
+  //     fetchUser();
+  //   }
+  // }, [token]);
+
+  // const fetchUser = async () => {
+  //   const token = localStorage.getItem("access");
+  //   if (!token) return;
+
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get(`${API_URL}/api/singleUser/`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+
+  //     setImage(response.data?.image || "");
+  //   } catch (error) {
+  //     toast.error("Failed to load profile");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchUser();
+  // }, []);
+  console.log("IMAGE FINAL URL:", resolveImageUrl(user?.image));
 
   const toggleChange = () => {
     setDarkMode((previous) => {
@@ -105,9 +128,11 @@ function Header() {
               <Link className="login" to="/profile">
                 profile
               </Link>
+
               <Link className="login" to="/changePassword">
                 change password
               </Link>
+
               <Link onClick={logout} className="signup" to="/login">
                 logout
               </Link>
@@ -116,15 +141,27 @@ function Header() {
                 <button className="add-post">+ Add Post</button>
               </Link>
 
-              <img
-                src={
-                  image
-                    ? resolveImageUrl(image)
-                    : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                }
-                alt="profile"
-                className="profile-avatar"
-              />
+              <div className="avatar-wrapper">
+                {loading && (
+                  <Skeleton
+                    variant="circular"
+                    height={120}
+                    width={120}
+                    className="avatar-skeleton"
+                  />
+                )}
+
+                <img
+                  src={
+                    user?.image
+                      ? resolveImageUrl(user.image)
+                      : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  }
+                  alt="profile"
+                  className="profile-avatar"
+                  style={{ opacity: 1 }}
+                />
+              </div>
 
               <div className="menu-wrapper">
                 <div
@@ -139,38 +176,42 @@ function Header() {
 
                 {openMenu && (
                   <div className="dropdown-menu">
-                    <div className="dropdown-item">
-                      <span>
-                        <FontAwesomeIcon
-                          icon={faMoon}
-                          style={{ marginRight: "8px" }}
-                        />
-                        Dark Mode
-                      </span>
+                    <div className="dropdown-item toggle-item">
+                      <div className="left">
+                        <FontAwesomeIcon icon={faMoon} />
+                        <span>Dark Mode</span>
+                      </div>
+
                       <div className="toggle-container">
                         <input
                           type="checkbox"
-                          id="toggle"
                           checked={darkMode}
                           onChange={toggleChange}
                         />
-                        <label htmlFor="toggle" className="toggle-btn"></label>
+                        <label className="toggle-btn"></label>
                       </div>
                     </div>
 
                     <Link
+                      to="/history"
+                      className="dropdown-item"
+                      onClick={() => closeMenu(false)}
+                    >
+                      <div className="left">
+                        <FontAwesomeIcon icon={faHistory} />
+                        <span>History</span>
+                      </div>
+                    </Link>
+
+                    <Link
                       to="/allPost"
                       className="dropdown-item"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        closeMenu(false);
-                      }}
+                      onClick={() => closeMenu(false)}
                     >
-                      <FontAwesomeIcon
-                        icon={faBookmark}
-                        style={{ marginRight: "8px" }}
-                      />
-                      Saved Posts
+                      <div className="left">
+                        <FontAwesomeIcon icon={faBookmark} />
+                        <span>Saved Posts</span>
+                      </div>
                     </Link>
                   </div>
                 )}

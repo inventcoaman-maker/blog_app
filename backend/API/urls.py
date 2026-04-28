@@ -34,6 +34,9 @@ urlpatterns=[
     path("verifyOtp/",views.verifyOtp.as_view()),
     path("savedPost/<int:post_id>/",views.savedPost.as_view()),
     path("allSavedPost/",views.allSavedPost.as_view()),
+    path("history/",views.history.as_view()),
+    path("historyDelete/",views.historyDelete.as_view())
+
 
 
     # path("bycategoryTag/",views.bycategoryTag.as_view())

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import "./Post_Edit.css";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function Post_Edit() {
   const { id } = useParams();
@@ -12,7 +15,7 @@ export default function Post_Edit() {
   const [post, setPost] = useState({
     title: "",
     text: "",
-    category: "",
+    category: null,
     tags: [],
     is_private: false,
   });
@@ -23,38 +26,39 @@ export default function Post_Edit() {
   const [thumbnail, setThumbnail] = useState(null);
 
   const token = localStorage.getItem("access");
-  console.log(tags);
 
   useEffect(() => {
-    // fetch(api.get(`category/`))
-    fetch(`${import.meta.env.VITE_API_URL}/api/category/`)
-      .then((res) => res.json())
-      .then((data) => setCategory(data.data.results));
+    const fetchData = async () => {
+      try {
+        const [categoryRes, tagRes] = await Promise.all([
+          axios.get(`${API_URL}/api/category/`),
+          axios.get(`${API_URL}/api/Tag/`),
+        ]);
+        setCategory(categoryRes.data.data.results);
+        setTags(tagRes.data.data.results);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
-    // fetch(api.get(`Tag/`))
-    fetch(`${import.meta.env.VITE_API_URL}/api/Tag/`)
-      .then((res) => res.json())
-      .then((data) => setTags(data.data.results));
-  }, []);
-
-  useEffect(() => {
-    // fetch(api.get(`singlePost/${id}/`))
-    fetch(`${import.meta.env.VITE_API_URL}/api/singlePost/${id}/`)
-      .then((res) => res.json())
-      .then((data) => {
-        const postData = data.data;
-
+    const fetchPost = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/singlePost/${id}/`);
+        const postData = response.data.data;
         setPost({
           ...postData,
           category: postData.category || "",
           tags: postData.tags || [],
         });
-      });
-  }, [id, category]);
-
-  // useEffect(() => console.log(api), []);
+      } catch (error) {
+        console.error("Error fetching post:", error);
+      }
+    };
+    fetchPost();
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,7 +67,7 @@ export default function Post_Edit() {
 
     formData.append("title", post.title);
     formData.append("text", post.text);
-    formData.append("category", post.category);
+    formData.append("category", post.category || "");
 
     post.tags.forEach((t) => {
       formData.append("tags", t);
@@ -74,30 +78,26 @@ export default function Post_Edit() {
 
     formData.append("is_private", post.is_private);
 
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/selfPostUpdate/${id}/`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/selfPostUpdate/${id}/`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         },
-        body: formData,
-      },
-    );
-    if (res.ok) {
-      toast.success("Post updated successfully");
-    } else {
-      toast.error("Failed to update post");
-    }
+      );
+      console.log(response);
 
-    const data = await res.json();
-    console.log(data);
-
-    if (res.ok) {
+      toast.success(response.data.message);
       navigate("/");
-    }
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || "Something went wrong";
 
-    console.log(data);
+      toast.error(errorMsg);
+    }
   };
 
   return (

@@ -2,6 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { signup } from "../../api/api";
 
 import "./signup.css";
 function Signup() {
@@ -25,21 +26,17 @@ function Signup() {
       [name]: value,
     }));
   };
-  // const API = import.meta.env.VITE_API_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/signup/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(inputValue),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      navigate("/");
+    try {
+      await signup(inputValue);
       toast.success("Signup successful 🎉");
-    } else {
-      setError(data.error);
+      navigate("/");
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || "Something went wrong";
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 

@@ -1,0 +1,49 @@
+/* Container */
+.history_box {
+    max-width: 700px;
+    margin: 20px auto;
+    padding: 10px;
+}
+
+/* Each item */
+.single_history {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-evenly;
+
+    padding: 10px 12px;
+    border-radius: 10px;
+
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+/* Hover effect (like Chrome) */
+.single_history:hover {
+    background: #f1f3f4;
+}
+
+/* Checkbox spacing */
+.form-check {
+    margin: 0;
+}
+
+/* Text */
+.single_history p {
+    margin: 0;
+    font-size: 14px;
+    color: #202124;
+    flex: 1;
+
+    /* truncate long text */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Optional: timestamp (if you add later) */
+.history_time {
+    font-size: 12px;
+    color: #5f6368;
+}

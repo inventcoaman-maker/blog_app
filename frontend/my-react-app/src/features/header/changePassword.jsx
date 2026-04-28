@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import "./changePassword.css";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { EyeIcon } from "@primer/octicons-react";
 import { EyeClosedIcon } from "@primer/octicons-react";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function ChangePassword() {
   const [currentPass, setCurrentPass] = useState({
@@ -17,15 +20,6 @@ export default function ChangePassword() {
   const [newToggleOn, setNewToggleOn] = useState(false);
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   const token = localStorage.getItem("access");
-  //   fetch(`${import.meta.env.VITE_API_URL}/api/singleUser/`, {
-  //     headers: {
-  //       Authorization: `Bearer ${token}`,
-  //     },
-  //   }).then((res) => res.json());
-  // }, []);
-
   const handleChange = (e) => {
     setCurrentPass((prev) => ({
       ...prev,
@@ -35,23 +29,17 @@ export default function ChangePassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("access");
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/changePassword/`,
-      {
-        method: "PATCH",
+    try {
+      await axios.patch(`${API_URL}/api/changePassword/`, currentPass, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(currentPass),
-      },
-    );
-    const data = await res.json();
-    if (res.ok) {
+      });
       navigate("/");
       toast.success("Password changed successfully 🎉");
-    } else {
-      toast.error(data.error);
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to change password");
     }
   };
   const handleToggleCurrentPassword = () => {
@@ -71,6 +59,7 @@ export default function ChangePassword() {
               <div className="input-with-icon">
                 <input
                   name="old_password"
+                  required
                   className="password-input"
                   onChange={handleChange}
                   type={currentToggleOn ? "text" : "password"}

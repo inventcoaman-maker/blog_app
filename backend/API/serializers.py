@@ -8,6 +8,11 @@ from django.contrib.auth import get_user_model
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+    def get_activity(self,obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Activity.objects.filter(user=request.user, target__icontains="password").values("action", "target", "created_at")
+        return []
 
 
 
@@ -42,6 +47,7 @@ class postSerailizer(serializers.ModelSerializer):
     pin_post=serializers.SerializerMethodField()
     saved_post=serializers.SerializerMethodField()
     total_savedPost=serializers.SerializerMethodField()
+    Activity=serializers.SerializerMethodField()
 
 
     class Meta:
@@ -69,6 +75,11 @@ class postSerailizer(serializers.ModelSerializer):
       if request and request.user.is_authenticated:
          return obj.like.filter(id=request.user.id).exists()
       return False
+    def get_Activity(self,obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Activity.objects.filter(user=request.user, target__icontains=f"post {obj.id}").values("action", "target", "created_at")
+        return []
     
     def get_total_likes(self,obj):
 
@@ -83,9 +94,16 @@ class postSerailizer(serializers.ModelSerializer):
 
 
 class userSerailizer(serializers.ModelSerializer):
+    Activity=serializers.SerializerMethodField()
+
+    def get_Activity(self,obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Activity.objects.filter(user=request.user).values("action", "target", "created_at")
+        return []
     class Meta:
         model=User
-        fields=('first_name',"last_name","email","image","phone")
+        fields=('first_name',"last_name","email","image","phone","Activity")
 
 class categroyserializer(serializers.ModelSerializer):
     class Meta:
@@ -99,31 +117,52 @@ class tagserializer(serializers.ModelSerializer):
         fields=("id","name")
 
 class commentSerailizer(serializers.ModelSerializer):
+    Activity=serializers.SerializerMethodField()
+    def get_Activity(self,obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Activity.objects.filter(user=request.user, target__icontains=f"comment {obj.id}").values("action", "target", "created_at")
+        return []
     class Meta:
         model=Comment
-        fields=("id","text")
+        fields=("id","text","Activity")
 
 class replySerailizer(serializers.ModelSerializer):
+    Activity=serializers.SerializerMethodField()
+    def get_Activity(self,obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Activity.objects.filter(user=request.user, target__icontains=f"reply {obj.id}").values("action", "target", "created_at")
+        return []
+    
 
     class Meta:
         model = Reply
-        fields = ("id", "text", "comment")
+        fields = ("id", "text", "comment","Activity")
 
 class profileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=User
-        fields=('id','image','first_name','last_name','phone',)
+        Activity=serializers.SerializerMethodField()
+        def get_Activity(self,obj):
+            request = self.context.get('request')
+            if request and request.user.is_authenticated:
+                return Activity.objects.filter(user=request.user, target__icontains="profile").values("action", "target", "created_at")
+            return 2
+        class Meta:
+          model=User
+          fields=('id','image','first_name','last_name','phone',"Activity")
 
 class authorSeriallizer(serializers.ModelSerializer):
       class Meta:
         model=User
         fields=('id','email',) 
 
+class HistorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model=Activity
+        fields="__all__"
+        
 
 
-# class likeSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model=Post
-#         fields=("like",) 
 
 

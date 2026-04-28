@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import PostSkeleton from "../post/PostSkeleton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart as solidHeart } from "@fortawesome/free-solid-svg-icons";
@@ -12,6 +13,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 export default function AllPost() {
   const [posts, setPosts] = useState([]);
   const token = localStorage.getItem("access");
@@ -20,14 +23,35 @@ export default function AllPost() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-    fetch(`${import.meta.env.VITE_API_URL}/api/allSavedPost/`, {
-      headers,
-    })
-      .then((res) => res.json())
-      .then((data) => setPosts(data.data));
+    const fetchPosts = async () => {
+      try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get(`${API_URL}/api/allSavedPost/`, {
+          headers,
+        });
+        setPosts(response.data.data);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+    fetchPosts();
   }, [token]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) return;
+      try {
+        const response = await axios.get(`${API_URL}/api/singleUser/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(response.data);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    fetchUser();
+  }, [token]);
+
   useEffect(() => {
     const time = setTimeout(() => {
       setLoading(false);
@@ -35,6 +59,56 @@ export default function AllPost() {
 
     return () => clearTimeout(time);
   }, []);
+
+  const handleClick = (categoryId) => {
+    navigate(`/?category=${categoryId}`);
+  };
+
+  const handleTagclick = (tag) => {
+    navigate(`/?tag=${tag}`);
+  };
+
+  const handleauthorClick = (authorId) => {
+    navigate(`/?author=${authorId}`);
+  };
+
+  const handleDelete = async (postId) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    try {
+      await axios.delete(`${API_URL}/api/selfPostDelete/${postId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPosts(posts.filter((post) => post.id !== postId));
+      toast.success("Post deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete post");
+    }
+  };
+
+  const handleLike = async (postId) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/like/${postId}/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setPosts(
+        posts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                is_liked: response.data.is_liked,
+                total_likes: response.data.total_likes,
+              }
+            : post,
+        ),
+      );
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
   return (
     <div className="posts-section">
       <div className="posts-grid">

@@ -1,6 +1,7 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./post_detail.css";
+import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart as solidHeart } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as regularHeart } from "@fortawesome/free-regular-svg-icons";
@@ -11,6 +12,8 @@ import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { resolveImageUrl } from "../../utils/imageUrl";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function Post_detail() {
   const { id } = useParams();
@@ -29,152 +32,140 @@ export default function Post_detail() {
   const [savedPost, setSavedPost] = useState(false);
 
   const navigate = useNavigate();
-  // const [likeToggle, setLikeToggle] = useState(false);
-  // console.log(comment);
-  console.log(totalPinPost);
-  // console.log(post);
-  // console.log(user);
-
-  // const token = localStorage.getItem("access")
-
-  // comment.map((value) => console.log(value.id));
   const token = localStorage.getItem("access");
 
   useEffect(() => {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    fetch(`${import.meta.env.VITE_API_URL}/api/singlePost/${id}/`, {
-      headers,
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        setPost(data.data);
-        console.log(data.data);
-
-        setPin(data.data.pin_post);
-        setSavedPost(data.data.saved_post);
+    const fetchPost = async () => {
+      try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get(`${API_URL}/api/singlePost/${id}/`, {
+          headers,
+        });
+        setPost(response.data.data);
+        setPin(response.data.data.pin_post);
+        setSavedPost(response.data.data.saved_post);
         setError("");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Failed to fetch post:", err);
         setError("Post not found or failed to load.");
         setPost(null);
-      });
-  }, [id]);
+      }
+    };
+    fetchPost();
+  }, [id, token]);
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/comment/${id}/`);
+        setComment(response.data.data);
+      } catch (error) {
+        console.error("Error fetching comments:", error);
+      }
+    };
+    fetchComments();
+  }, [id, refreshApi]);
+
+  useEffect(() => {
+    const fetchReplies = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/reply/${id}/`);
+        setReply(response.data.data);
+      } catch (error) {
+        console.error("Error fetching replies:", error);
+      }
+    };
+    fetchReplies();
+  }, [id, refreshApi]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) return;
+      try {
+        const response = await axios.get(`${API_URL}/api/singleUser/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(response.data);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    fetchUser();
+  }, [token]);
+
+  useEffect(() => {
+    const fetchUserPosts = async () => {
+      if (!token) return;
+      try {
+        const response = await axios.get(`${API_URL}/api/currentUserPost/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setTotalPinPost(response.data);
+      } catch (error) {
+        console.error("Error fetching user posts:", error);
+      }
+    };
+    fetchUserPosts();
+  }, [token]);
 
   const handleComment = (e) => {
     setCommentText(e.target.value);
   };
 
-  // useEffect(() => {
-  //   fetch(`${import.meta.env.VITE_API_URL}/api/comment/${id}/`)
-  //     .then((res) => res.json())
-  //     .then((data) => setComment(data.data));
-  // }, [id]);
-
-  // useEffect(() => {
-  //   fetch(`${import.meta.env.VITE_API_URL}/api/reply/${id}/`)
-  //     .then((res) => res.json())
-  //     .then((data) => setReply(data.data));
-  // }, [id]);
-  // reply;
-  // const fetchComments = async () => {
-  //   const res = await fetch(
-  //     `${import.meta.env.VITE_API_URL}/api/comment/${id}/`,
-  //   );
-  //   const data = await res.json();
-  //   setComment(data.data);
-  // };
-
-  useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/comment/${id}/`)
-      .then((res) => res.json())
-      .then((data) => setComment(data.data));
-  }, [id, refreshApi]);
-
-  // useEffect(() => {
-  //   fetchComments();
-  // }, [id]);
-
   const handleCommentClick = async () => {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/comment/${id}/`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+    try {
+      await axios.post(
+        `${API_URL}/api/comment/${id}/`,
+        { text: commentText },
+        {
+          headers: { Authorization: `Bearer ${token}` },
         },
-        body: JSON.stringify({
-          text: commentText,
-        }),
-      },
-    );
-    if (res.ok) {
+      );
       setCommentText("");
       setRefreshApi((prev) => !prev);
+    } catch (error) {
+      console.error("Error posting comment:", error);
     }
   };
-
-  useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/reply/${id}/`)
-      .then((res) => res.json())
-      .then((data) => {
-        //  console.log("reply data", data);
-        setReply(data.data);
-      });
-    // const data = await res.json();
-    // setReply(data.data);
-  }, [id, refreshApi]);
 
   const handleReplyClick = async (commentId) => {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/reply/${id}/`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+    try {
+      await axios.post(
+        `${API_URL}/api/reply/${id}/`,
+        {
           text: replyText[commentId],
           comment: commentId,
-        }),
-      },
-    );
-
-    if (res.ok) {
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setReplyText((prev) => ({ ...prev, [commentId]: "" }));
       setRefreshApi((prev) => !prev);
+    } catch (error) {
+      console.error("Error posting reply:", error);
     }
   };
-  useEffect(() => {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    fetch(`${import.meta.env.VITE_API_URL}/api/singleUser/`, { headers })
-      .then((res) => res.json())
-      .then((data) => setUser(data));
-  }, [token]);
 
-  const handleReply = (commentId) =>
+  const handleReply = (commentId) => {
     setReplyInput((prev) => (prev === commentId ? null : commentId));
+  };
 
   const handleLike = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/like/${id}/`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-    setLike(data.liked);
-
-    // setLikeCount(data.like_count);
+    try {
+      const response = await axios.patch(
+        `${API_URL}/api/like/${id}/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setLike(response.data.liked);
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
   };
+
   useEffect(() => {
     if (post) {
       setLike(post.is_liked);
@@ -182,106 +173,47 @@ export default function Post_detail() {
     }
   }, [post]);
 
-  const handleDelete = async (id) => {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/selfPostDelete/${id}/`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    if (res.ok) {
+  const handleDelete = async (postId) => {
+    try {
+      await axios.delete(`${API_URL}/api/selfPostDelete/${postId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       navigate("/");
       toast.success("post deleted successfully 🎉");
+    } catch (error) {
+      toast.error("Failed to delete post");
     }
   };
 
   const handlePin = async () => {
-    const url = `${import.meta.env.VITE_API_URL}/api/pin_post/${id}/`;
-    // if (totalPinPost.length >= 3 && !pin) {
-    //   const res = await fetch(url, {
-    //     method: "PATCH",
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //   });
-    //   const data = await res.json();
-    //   if (res.ok) {
-    //     toast.error(
-    //       "You can only pin up to 3 posts. Please unpin another post before pinning this one.",
-    //     );
-    //   }
-    //   return;
-    // }
-
-    const res = await fetch(url, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    // const res = await fetch(url, {
-    //   method: "PATCH",
-    //   headers: {
-    //     Authorization: `Bearer ${token}`,
-    //   },
-    // });
-
-    const data = await res.json();
-    setPin(data.pin_post);
-    if (res.ok) {
-      toast.success(data.pin_post ? "Post pinned" : "Post unpinned");
-    } else {
-      toast.error(data.error);
+    try {
+      const response = await axios.patch(
+        `${API_URL}/api/pin_post/${id}/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setPin(response.data.pin_post);
+      toast.success(response.data.pin_post ? "Post pinned" : "Post unpinned");
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to pin post");
     }
-
-    // if(totalPinPost.length >= 3 && !pin){
-    //   toast.error("You can only pin up to 3 posts. Please unpin another post before pinning this one.");
-    // }
   };
-  console.log(post);
 
-  useEffect(() => {
-    const headers = { Authorization: `Bearer ${token}` };
-    fetch(`${import.meta.env.VITE_API_URL}/api/currentUserPost/`, { headers })
-      .then((res) => res.json())
-      .then((data) => setTotalPinPost(data));
-  }, [token]);
-  // console.log(totalPinPost);
-  // const pin_post_arr = [];
-  // totalPinPost.forEach((value) => {
-  //   // console.log(value.pin_post === true)
-  //   if (value.pin_post === true) {
-  //     pin_post_arr.push(value.pin_post);
-  //   }
-  // });
-  // console.log(pin_post_arr);
-
-  // const currentUser= async ()=>{
-  //   const res= await fetch(`${import.meta.env.VITE_API_URL}/api/currentUserPost/`)
-
-  // }
-
-  // const handleLikeToggle = () => {
-  //   setLikeToggle((prev) => !prev);
-  // };
-  const handleSavedPost = async (id) => {
-    const url = `${import.meta.env.VITE_API_URL}/api/savedPost/${id}/`;
-    const res = await fetch(url, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await res.json();
-    setSavedPost(data.saved_post);
-    if (res.ok) {
-      toast.success(data.saved_post ? "Post saved" : "Post unsaved");
-    } else {
-      toast.error(data.error);
+  const handleSavedPost = async (postId) => {
+    try {
+      const response = await axios.patch(
+        `${API_URL}/api/savedPost/${postId}/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setSavedPost(response.data.saved_post);
+      toast.success(response.data.saved_post ? "Post saved" : "Post unsaved");
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to save post");
     }
   };
 
@@ -445,8 +377,12 @@ export default function Post_detail() {
                       width="16"
                       height="16"
                       fill="currentColor"
-                      style={{ cursor: "pointer" }}
-                      className="bi bi-pin pin-icon"
+                      style={{
+                        cursor: "pointer",
+                        color: pin ? "black" : "gray",
+                        transform: pin ? "rotate(0deg)" : "rotate(45deg)",
+                        transition: "0.2s",
+                      }}
                       viewBox="0 0 16 16"
                     >
                       <path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.708V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354" />

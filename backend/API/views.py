@@ -15,6 +15,7 @@ today = timezone.now().date()
 from django.core.cache import cache
 from .utils import genrate_otp
 from django.contrib.auth.models import BaseUserManager
+import copy
 
 
 
@@ -146,7 +147,6 @@ class allUsers(APIView):
         # print(request.user)
         
 class singleUser(APIView):
-
     def get(self,request):
         if not request.user.is_authenticated:
             return Response({}, status=status.HTTP_200_OK)
@@ -158,6 +158,7 @@ class singleUser(APIView):
         serializers=userSerailizer(x)
         return Response(
             serializers.data
+            
         ,status=status.HTTP_200_OK )
     # permission_classes = [AllowAny]
     # def get(self, request,id):
@@ -185,7 +186,9 @@ class singleUser(APIView):
         print(serializers)
         if serializers.is_valid():
             serializers.save()
-            return Response(serializers.data, status=status.HTTP_201_CREATED)
+            Activity.objects.create(user=request.user, action="Updated profile",target=f"you updated your profile")    
+            
+            return Response( serializers.data, status=status.HTTP_201_CREATED)
         return Response(
             serializers.errors,status=status.HTTP_400_BAD_REQUEST
         )
@@ -219,11 +222,14 @@ class changePassword(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 
+                
                 user.set_password(new_password)
                 user.save()
+                Activity.objects.create(user=request.user, action="Changed password", target=f"you changed your password")
+               
 
                 return Response(
-                    {"status": True, "message": "Password changed successfully"},
+                    {"status": True, "message": "Password changed successfully","change_pass":f"you changed your password"},
                     status=status.HTTP_200_OK
                 )
 
@@ -266,6 +272,7 @@ class postCreate(APIView):
         serializer= postSerailizer(data=request.data)
         if serializer.is_valid():
             serializer.save(author=request.user)
+            Activity.objects.create(user=request.user, action="Created post", target=f"you created post {serializer.instance.id}")
             return  Response({
                 "message":"created"
             },status=status.HTTP_201_CREATED)
@@ -312,12 +319,16 @@ class selfPostUpdate(APIView):
           serailizer=postSerailizer(postId,data=request.data)
           if serailizer.is_valid():
               serailizer.save(author=request.user)
+              Activity.objects.create(user=request.user, action="Updated post", target="post updated")
               return Response({"message":"updated successfully"},
                   status=status.HTTP_201_CREATED)
           return Response(
-                serailizer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+              {
+                  "message": "Failed to update post",
+                  "errors": serailizer.errors
+              },
+              status=status.HTTP_400_BAD_REQUEST
+          )
         except Exception as e:
             return Response({
                 "error": f"Something went wrong: {str(e)}"
@@ -325,10 +336,16 @@ class selfPostUpdate(APIView):
 class selfPostDelete(APIView):
     permission_classes = [IsAuthenticated]
     def delete(self, request, id):
+        delete_message={
+
+        }
         x = Post.objects.filter(author=request.user)
         post = get_object_or_404(x, id=id)
+        deleted_post=copy.deepcopy(post)
         post.delete()
-        return Response({"message": "deleted successfully"}, status=status.HTTP_200_OK)
+        activity=Activity.objects.create(user=request.user, action="Deleted post", target=f"you deleted post {deleted_post.id}")
+        delete_message["activity"]=f"you deleted post {deleted_post.id}"
+        return Response({"message": "deleted successfully","delete_message":delete_message}, status=status.HTTP_200_OK)
     
 class allPost(APIView):
     def get(self, request):
@@ -438,14 +455,10 @@ class allPost(APIView):
 class category(APIView):
     def get(self,request):
         try:
+           categories = Category.objects.all().order_by("id")
            paginator = CustomPagination()
-           tag_id = request.query_params.get("tag")
-           posts = Post.objects.all()
-           if tag_id:
-                posts = posts.filter(tags__id=tag_id)
-           posts = posts.order_by("id").distinct()
-           paginated=paginator.paginate_queryset(queryset=posts,request=request)
-           serailizer=postSerailizer(paginated,many=True, context={"request": request})
+           paginated=paginator.paginate_queryset(queryset=categories,request=request)
+           serailizer=categroyserializer(paginated,many=True)
            return paginator.get_paginated_response(serailizer.data)
         except Exception as e:
             return Response({"error": f"Something went wrong: {str(e)}"
@@ -498,14 +511,10 @@ class categoryupdateDelete(APIView):
 class tag(APIView):
     def get(self,request):
         try:
+           tags = Tag.objects.all().order_by("id")
            paginator = CustomPagination()
-           tag_id = request.query_params.get("tag")
-           posts = Post.objects.all()
-           if tag_id:
-                posts = posts.filter(tags__id=tag_id)
-           posts = posts.order_by("id").distinct()
-           paginated=paginator.paginate_queryset(queryset=posts,request=request)
-           serailizer=postSerailizer(paginated,many=True, context={"request": request})
+           paginated=paginator.paginate_queryset(queryset=tags,request=request)
+           serailizer=tagserializer(paginated,many=True)
            return paginator.get_paginated_response(serailizer.data)
         except Exception as e:
             return Response({"error": f"Something went wrong: {str(e)}"
@@ -611,11 +620,12 @@ class comment(APIView):
 
     def post(self,request,id):
        x=get_object_or_404(Post,id=id)
-       print
+       print(x)
        if request.user.is_authenticated:
            serializer=commentSerailizer(data=request.data)    
            if serializer.is_valid():
                serializer.save(user=request.user,post=x)
+               Activity.objects.create(user=request.user, action="Created comment", target=f"you commented on post {x.id}")
                return Response({
                     "status": 201,
                     "statusText": "accepted",
@@ -641,6 +651,7 @@ class reply(APIView):
             serializer = replySerailizer(data=request.data)
             if serializer.is_valid():
                 serializer.save(user=request.user, comment=comment)
+                Activity.objects.create(user=request.user, action="Created reply", target=f"you replied to comment {comment.id}")
                 return Response({
                     "status": 201,
                     "message": "Reply created successfully"
@@ -671,32 +682,33 @@ class profile(APIView):
             return Response({
                 "status": 400,
                 "statusText": "Bad Request",
-                "message": "First name cannot be empty"
+                "error": "First name cannot be empty"
             }, status=status.HTTP_400_BAD_REQUEST)
         if last_name is not None and last_name.strip() == "":
             return Response({
                 "status": 400,
                 "statusText": "Bad Request",
-                "message": "Last name cannot be empty"
+                "error": "Last name cannot be empty"
             }, status=status.HTTP_400_BAD_REQUEST)
 
         if phone1:
             phone1=phone1.strip()
-            if(len(phone1)>10 or not rule.search(phone1)):
+            if(len(phone1)>10 or not rule.search(phone1) or len(phone1)==0):
               return Response({
                  "status": 400,
                     "statusText": "Bad Request",
-                    "message": "Phone must be exactly 10 digits"})
+                    "error": "Phone must be exactly 10 digits and contain only number"}, status=status.HTTP_400_BAD_REQUEST)
         print(phone1)
         if (User.objects.filter(phone=phone1).exclude(id=request.user.id).exists()):
             return Response({
                  "status": 400,
                     "statusText": "Bad Request",
-                    "message": "Phone number already in use"},status=status.HTTP_400_BAD_REQUEST)
+                    "error": "Phone number already in use"},status=status.HTTP_400_BAD_REQUEST)
         
         serializer=profileSerializer(x,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
+            Activity.objects.create(user=request.user, action="Updated profile", target=f"you updated your profile")
             return Response({
                "status": 202,
                 "statusText": "Accepted",
@@ -710,14 +722,20 @@ class like(APIView):
        def patch(self, request, post_id):
         post = get_object_or_404(Post,id=post_id)
         user=request.user
+        like_message={
+
+        }
         if user in post.like.all():
             post.like.remove(user)
             like=False
         else:
             post.like.add(user)
+            activity=Activity.objects.create(user=request.user, action="Liked post", target=f"you liked post {post.id}")
+            like_message["activity"]=f"you liked post {post.id}"
             like=True
 
         return Response({
+           "message":like_message,
             "liked": like,
             "like_count": post.like.count()
         })
@@ -733,6 +751,9 @@ class pin_post(APIView):
         first_pined_post=Post.objects.filter(pin_post=request.user).first()
         print(first_pined_post)
         user=request.user
+        pinned_message={
+
+        }
         if user in post.pin_post.all():
             post.pin_post.remove(user)
             pin_post=False
@@ -741,7 +762,10 @@ class pin_post(APIView):
             if pined_post_length>=3:
                 first_pined_post.pin_post.remove(user)
                 post.pin_post.add(user)
+
             post.pin_post.add(user)
+            activity=Activity.objects.create(user=request.user, action="Pinned post", target=f"you pinned post {post.id}")
+            pinned_message["activity"]=f"you pinned post {post.id}"
             # x=post.pin_post.all()
             # for i in x:
             #     print(i)
@@ -753,6 +777,7 @@ class pin_post(APIView):
         # print(self.remove_pinned_lst)
 
         return Response({
+            "message":pinned_message,
             "pin_post": pin_post,
         })
        
@@ -807,16 +832,22 @@ class savedPost(APIView):
      def patch(self,request,post_id):
         x=get_object_or_404(Post,id=post_id)
         user=request.user
+        savedpost={
+
+        }
         if user in x.saved_post.all():
             x.saved_post.remove(user)
             saved_post=False
         else:
             x.saved_post.add(user)
+            activity=Activity.objects.create(user=request.user, action="Saved post", target=f"you saved {x.id} post")
+            savedpost["activity"]=f"you  saved {x.id} post"
             saved_post= True
         # print(x.comments.all())
         # print(x.comments.all())
 
         return Response({
+            "message":savedpost,
             "saved_post": saved_post,
             "saved_count": x.saved_post.count()
         })
@@ -834,3 +865,45 @@ class allSavedPost(APIView):
             "data":
                 serializer.data
         })
+    
+
+class history(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        all_history=Activity.objects.filter(user=request.user).order_by("-created_at")
+        print(len(all_history))
+        serializer=HistorySerializer(all_history,many=True)
+        return Response(
+           {
+            "status": 200,
+            "statusText": "ok",
+            "message": "Data fetched successfully",
+            "data":
+                serializer.data
+        },status=200
+
+        )
+
+class historyDelete(APIView):
+    permission_classes=[IsAuthenticated]
+    def delete(self,request):
+        ids=request.data.get("ids",[])
+        
+        if not isinstance(ids, list) or not ids:
+            return Response(
+                {"error": "Provide a valid list of IDs"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        x=Activity.objects.filter(id__in=ids, user=request.user)
+        
+        if not x.exists():
+            return Response(
+                {"message": "No activities found to delete"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        x.delete()
+        return Response({"message": "history deleted successfully"}, status=status.HTTP_200_OK)
+
+

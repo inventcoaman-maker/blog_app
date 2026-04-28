@@ -15,6 +15,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ProtectedRoute } from "./protectedRoute.jsx";
 import AllPost from "./features/post/AllPost.jsx";
+import History from "./features/header/history.jsx";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/post_detail/:id" element={<Post_detail />} />
         <Route path="/post_edit/:id" element={<Post_Edit />} />
         <Route path="/allPost" element={<AllPost />} />
+        <Route path="/History" element={<History />}></Route>
       </Routes>
     </>
   );

@@ -92,6 +92,7 @@ class Post(models.Model):
     like = models.ManyToManyField(User, related_name='blog_posts', blank=True)
     saved_post=models.ManyToManyField(User, related_name='blog_savedPosts', blank=True)
     pin_post= models.ManyToManyField(User,blank=True,related_name='blog_posts_pin_post')
+   
 
     def publish(self):
         self.published_date = timezone.now()
@@ -138,7 +139,16 @@ class Reply(models.Model):
 
 
 
-    
+class Activity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True)
+
+    action = models.CharField(max_length=255)
+    target = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} - {self.action}"
 
 
 
