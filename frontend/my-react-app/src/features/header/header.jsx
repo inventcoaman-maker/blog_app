@@ -1,7 +1,5 @@
 import { useState, useEffect, useContext } from "react";
 import "./Header.css";
-import axios from "axios";
-
 import { Link, useNavigate } from "react-router-dom";
 import { resolveImageUrl } from "../../utils/imageUrl";
 import { toast } from "react-toastify";
@@ -12,7 +10,7 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 import { faHistory } from "@fortawesome/free-solid-svg-icons";
 import Skeleton from "@mui/material/Skeleton";
 import { UserContext } from "../context/context.jsx";
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+import { logout as logoutApi } from "../../api/api.js";
 
 function Header() {
   const navigate = useNavigate();
@@ -97,12 +95,18 @@ function Header() {
     });
   };
 
-  const logout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    window.dispatchEvent(new Event("authChange"));
-    navigate("/login");
-    toast.success("Logged out successfully");
+  const logout = async () => {
+    try {
+      await logoutApi();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("access");
+      localStorage.removeItem("refresh");
+      window.dispatchEvent(new Event("authChange"));
+      navigate("/login");
+      toast.success("Logged out successfully");
+    }
   };
 
   const handleMenu = () => {
