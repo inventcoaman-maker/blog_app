@@ -1,15 +1,19 @@
 import { useState, useEffect, use } from "react";
 import "./home.css";
-import { Link, useSearchParams, useParams } from "react-router-dom";
+import { Link, useSearchParams, useParams, Router } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart as solidHeart } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as regularHeart } from "@fortawesome/free-regular-svg-icons";
 import { faComment as regularComment } from "@fortawesome/free-regular-svg-icons";
+import { faCaretLeft, faCaretRight } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeftLong } from "@fortawesome/free-solid-svg-icons";
 import { faBookmark } from "@fortawesome/free-solid-svg-icons";
 import { resolveImageUrl } from "../../utils/imageUrl";
 import { toast } from "react-toastify";
 import PostSkeleton from "../post/PostSkeleton";
+import { getAllUsers } from "../../api/api";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
   const [posts, setPost] = useState([]);
@@ -24,7 +28,12 @@ function Home() {
   const [savedPost, setSavedPost] = useState(false);
   // const [like,setLike]=useState(false)
   const [searchParams, setSearchParams] = useSearchParams();
+  const [titleInput, setTitleInput] = useState("");
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [zeroData, setZeroData] = useState(false);
   const token = localStorage.getItem("access");
+  const navigate = useNavigate();
+
   // const { id } = useParams();
   // console.log("gfffffffffffff", refreshApi);
 
@@ -53,8 +62,10 @@ function Home() {
   // console.log(posts);
 
   useEffect(() => {
-    setLoading(true);
-    setDataLoaded(false);
+    if (!hasLoadedOnce) {
+      setLoading(true);
+    }
+
     const url = `${import.meta.env.VITE_API_URL}/api/allPost/?page=${
       searchParams.get("page") || 1
     }&category=${searchParams.get("category") || ""}&tag=${
@@ -66,8 +77,7 @@ function Home() {
     fetch(url, { headers })
       .then((res) => {
         if (res.status === 401) {
-          localStorage.removeItem("access");
-          localStorage.removeItem("refresh");
+          localStorage.clear();
           window.location.reload();
           return;
         }
@@ -76,11 +86,13 @@ function Home() {
       .then((data) => {
         setPost(data?.data?.results || []);
         settPage(data?.data?.total_pages || 1);
-        setDataLoaded(true);
       })
       .catch((error) => {
         console.error("Error fetching posts:", error);
-        setDataLoaded(true); // Even on error, stop loading after timeout
+      })
+      .finally(() => {
+        setLoading(false);
+        setHasLoadedOnce(true);
       });
 
     if (token) {
@@ -91,15 +103,6 @@ function Home() {
         .then((data) => setUser(data));
     }
   }, [searchParams, refreshApi]);
-
-  useEffect(() => {
-    if (dataLoaded) {
-      const timer = setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [dataLoaded]);
 
   let page_arr = [];
   for (let i = 1; i <= Page; i++) {
@@ -294,6 +297,63 @@ function Home() {
   //   },
   //   [savedPost],
   // );
+  const titleInputChange = (e) => {
+    // console.log(e);
+
+    setTitleInput(() => e.target.value);
+    setSearchParams((prev) => {
+      prev.set("title", e.target.value);
+      prev.set("page", 1);
+      return prev;
+    });
+  };
+  console.log(titleInput);
+
+  const handleTitleSearch = () => {
+    const url = `${import.meta.env.VITE_API_URL}/api/allPost/?page=${
+      searchParams.get("page") || 1
+    }&title=${searchParams.get("title") || ""}`;
+
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    fetch(url, { headers })
+      .then((res) => {
+        if (res.status === 401) {
+          localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
+          window.location.reload();
+          return;
+        }
+
+        return res.json();
+      })
+
+      .then((data) => {
+        console.log(data?.data?.results.length);
+        if (data?.data?.results.length <= 0) {
+          setZeroData(true);
+          setRefreshApi((prev) => !prev);
+          toast.error("no data found");
+        }
+
+        setPost(data?.data?.results || []);
+        settPage(data?.data?.total_pages || 1);
+        setTitleInput("");
+      })
+      .catch((error) => {
+        console.error("Error fetching posts:", error);
+      });
+
+    if (token) {
+      fetch(`${import.meta.env.VITE_API_URL}/api/singleUser/`, {
+        headers,
+      })
+        .then((res) => res.json())
+        .then((data) => setUser(data));
+    }
+  };
+
+  const handleLeft = () => (navigate("/"), setZeroData(false));
 
   return (
     <div className="home-container">
@@ -317,19 +377,7 @@ function Home() {
               disabled={searchParams.get("page") === "1"}
               onClick={handlePreviousChange}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-arrow-left"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
-                />
-              </svg>
+              <FontAwesomeIcon icon={faCaretLeft} />
             </button>
 
             <div className="pagination-numbers">
@@ -356,19 +404,7 @@ function Home() {
               disabled={searchParams.get("page") === Page.toString()}
               onClick={handleNextChange}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-arrow-right"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"
-                />
-              </svg>
+              <FontAwesomeIcon icon={faCaretRight} />
             </button>
           </nav>
         </div>
@@ -411,131 +447,161 @@ function Home() {
           </div>
         </div>
       </div>
+      <div className="search_box">
+        <div class="input-group mb-3">
+          <input
+            onChange={titleInputChange}
+            type="text"
+            value={titleInput}
+            class="form-control"
+            placeholder="search by title"
+            aria-label="Recipient's username"
+            aria-describedby="basic-addon2"
+          />
 
+          <button
+            onClick={handleTitleSearch}
+            type="button"
+            class="btn btn-primary"
+          >
+            by title
+          </button>
+        </div>
+      </div>
       <div className="posts-section">
         <div className="posts-grid">
-          {loading
-            ? // Show 6 skeleton cards while loading
-              Array.from({ length: 6 }, (_, index) => (
-                <PostSkeleton key={`skeleton-${index}`} />
-              ))
-            : posts.map((post) =>
-                token || !post.is_private || post.pin_post ? (
-                  <div className="post-card" key={post.id}>
-                    <div className="post-image-container">
-                      {post.saved_post && <FontAwesomeIcon icon={faBookmark} />}
-                      {post.image ? (
-                        <img
-                          src={resolveImageUrl(post.image)}
-                          alt={post.title}
-                          className="post-image"
-                        />
-                      ) : null}
+          {zeroData ? (
+            <div className="arrow_text">
+              <FontAwesomeIcon
+                style={{ cursor: "pointer" }}
+                onClick={handleLeft}
+                icon={faArrowLeftLong}
+              />
+              <p>no data found</p>
+            </div>
+          ) : loading ? (
+            Array.from({ length: 6 }, (_, index) => (
+              <PostSkeleton key={`skeleton-${index}`} />
+            ))
+          ) : (
+            posts.map((post) =>
+              token || !post.is_private || post.pin_post ? (
+                <div className="post-card" key={post.id}>
+                  <div className="post-image-container">
+                    {post.saved_post && <FontAwesomeIcon icon={faBookmark} />}
+                    {post.image ? (
+                      <img
+                        src={resolveImageUrl(post.image)}
+                        alt={post.title}
+                        className="post-image"
+                      />
+                    ) : null}
+                  </div>
+
+                  <div className="post-content">
+                    <h3 className="post-title">
+                      <Link to={`/post_detail/${post.id}`}>{post.title}</Link>
+                    </h3>
+
+                    <p
+                      className="post-category"
+                      onClick={() => handleClick(post.category)}
+                    >
+                      📁 {post.category_name}
+                    </p>
+
+                    <p className="post-text">{post.text}</p>
+
+                    <div className="post-tags">
+                      {post.tag_names?.map((tag, i) => (
+                        <span
+                          key={i}
+                          onClick={() => handleTagclick(tag)}
+                          className="tag-chip"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
                     </div>
 
-                    <div className="post-content">
-                      <h3 className="post-title">
-                        <Link to={`/post_detail/${post.id}`}>{post.title}</Link>
-                      </h3>
-
-                      <p
-                        className="post-category"
-                        onClick={() => handleClick(post.category)}
-                      >
-                        📁 {post.category_name}
-                      </p>
-
-                      <p className="post-text">{post.text}</p>
-
-                      <div className="post-tags">
-                        {post.tag_names?.map((tag, i) => (
-                          <span
-                            key={i}
-                            onClick={() => handleTagclick(tag)}
-                            className="tag-chip"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="post-footer">
-                        <div className="left">
-                          <span
-                            onClick={() => handleauthorClick(post.author)}
-                            className="post-author"
-                          >
-                            👤 {post.email}
-                          </span>
-                          <span className="post-date">
-                            📅 {post.created_date}
-                          </span>
-                        </div>
-
-                        <div className="right">
-                          {user.email === post.email && (
-                            <div className="edit_delete">
-                              <Link
-                                to={`/post_edit/${post.id}`}
-                                className="edit-link"
-                              >
-                                ✏️ Edit
-                              </Link>
-                              <div className="">
-                                <svg
-                                  onClick={() => handleDelete(post.id)}
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="16"
-                                  fill="currentColor"
-                                  class="bi bi-trash"
-                                  viewBox="0 0 16 16"
-                                >
-                                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
-                                  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
-                                </svg>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="like_comment">
-                        <div
-                          className="icon_group"
-                          onClick={() => handleLike(post.id)}
-                          style={{ cursor: "pointer" }}
+                    <div className="post-footer">
+                      <div className="left">
+                        <span
+                          onClick={() => handleauthorClick(post.author)}
+                          className="post-author"
                         >
-                          <FontAwesomeIcon
-                            icon={post.is_liked ? solidHeart : regularHeart}
-                            className={`like_icon ${post.is_liked ? "liked" : "unliked"}`}
-                          />
-                          <p>{post.total_likes}</p>
-                        </div>
+                          👤 {post.email}
+                        </span>
+                        <span className="post-date">
+                          📅 {post.created_date}
+                        </span>
+                      </div>
 
-                        <div className="icon_group">
-                          <FontAwesomeIcon icon={regularComment} />
-                          <p>{post.total_comments}</p>
-                        </div>
-                        {post.pin_post && (
-                          <div className="">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              fill="currentColor"
-                              style={{ cursor: "pointer" }}
-                              className="bi bi-pin pin-icon"
-                              viewBox="0 0 16 16"
+                      <div className="right">
+                        {user.email === post.email && (
+                          <div className="edit_delete">
+                            <Link
+                              to={`/post_edit/${post.id}`}
+                              className="edit-link"
                             >
-                              <path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.708V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354" />
-                            </svg>
+                              ✏️ Edit
+                            </Link>
+                            <div className="">
+                              <svg
+                                onClick={() => handleDelete(post.id)}
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                fill="currentColor"
+                                class="bi bi-trash"
+                                viewBox="0 0 16 16"
+                              >
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                              </svg>
+                            </div>
                           </div>
                         )}
                       </div>
                     </div>
+                    <div className="like_comment">
+                      <div
+                        className="icon_group"
+                        onClick={() => handleLike(post.id)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <FontAwesomeIcon
+                          icon={post.is_liked ? solidHeart : regularHeart}
+                          className={`like_icon ${post.is_liked ? "liked" : "unliked"}`}
+                        />
+                        <p>{post.total_likes}</p>
+                      </div>
+
+                      <div className="icon_group">
+                        <FontAwesomeIcon icon={regularComment} />
+                        <p>{post.total_comments}</p>
+                      </div>
+                      {post.pin_post && (
+                        <div className="">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            style={{ cursor: "pointer" }}
+                            className="bi bi-pin pin-icon"
+                            viewBox="0 0 16 16"
+                          >
+                            <path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.708V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                ) : null,
-              )}
+                </div>
+              ) : null,
+            )
+          )}
         </div>
       </div>
     </div>

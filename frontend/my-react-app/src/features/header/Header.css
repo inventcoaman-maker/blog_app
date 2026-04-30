@@ -89,7 +89,8 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: fill;
+    cursor: pointer;
     border: 3px solid #e5e7eb;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
@@ -141,7 +142,6 @@
 
 .header {
     position: relative;
-    z-index: 9999;
 }
 
 .dropdown-menu {
@@ -153,7 +153,6 @@
     border-radius: 10px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     min-width: 220px;
-    z-index: 9999;
 }
 
 .avatar-wrapper {

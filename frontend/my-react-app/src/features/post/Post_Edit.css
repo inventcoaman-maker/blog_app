@@ -70,6 +70,7 @@
 /* file field */
 .file-field {
     margin-top: 15px;
+    object-fit: fill;
 }
 
 /* current file text */

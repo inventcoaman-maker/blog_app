@@ -13,9 +13,9 @@ import Post_detail from "./features/post/post_detail.jsx";
 import Post_Edit from "./features/post/post_edit.jsx";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ProtectedRoute } from "./protectedRoute.jsx";
 import AllPost from "./features/post/AllPost.jsx";
 import History from "./features/header/history.jsx";
+import protectedRoute from "./protectedRoute.jsx";
 
 function App() {
   return (
@@ -26,6 +26,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
+
         <Route path="/add_post" element={<Add_post />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/changePassword" element={<ChangePassword />} />

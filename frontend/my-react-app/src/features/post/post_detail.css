@@ -34,7 +34,7 @@
     max-height: 420px;
     border-radius: 14px;
     margin-bottom: 20px;
-    object-fit: cover;
+    object-fit: fill;
     display: block;
 }
 

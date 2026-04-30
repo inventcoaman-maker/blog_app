@@ -353,17 +353,36 @@ class allPost(APIView):
             category = request.query_params.get("category")
             tag = request.query_params.get("tag")
             author = request.query_params.get("author")
+            title=request.query_params.get("title")
 
             queryset = Post.objects.all().order_by("-created_date")
 
             if category:
                 queryset = queryset.filter(category__id=category)
+                if(len(queryset)==0):
+                    return Response({
+                        "message":"not data found"
+                    },status=400)
                
             if tag:
                 queryset = queryset.filter(tags__id=tag)
+                if(len(queryset)==0):
+                    return Response({
+                        "message":"not data found"
+                    },status=400)
             if author:
                 queryset = queryset.filter(author__id=author)
                 print(queryset)
+                if(len(queryset)==0):
+                    return Response({
+                        "message":"not data found"
+                    },status=400)
+            if title:
+                queryset=queryset.filter(title__icontains=title)
+                if(len(queryset)==0):
+                    return Response({
+                        "message":"not data found"
+                    },status=400)
 
             
             if not request.user.is_authenticated:
@@ -405,6 +424,10 @@ class allPost(APIView):
                     if author:
                         pinned = pinned.filter(author__id=author)
                         others = others.filter(author__id=author)
+                    if title:
+                        pinned=pinned.filter(title__icontains=title)
+                        others = others.filter(title__icontains=title)
+
 
                     queryset = list(pinned) + list(others)
 
@@ -589,6 +612,7 @@ class singlePost(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self,request,id):
         x=get_object_or_404(Post,id=id)
+        print(x)
         print(x.tags.all())
         # print(x.comments.all())
         # print(x.comments.all())
@@ -907,3 +931,23 @@ class historyDelete(APIView):
         return Response({"message": "history deleted successfully"}, status=status.HTTP_200_OK)
 
 
+
+class postByTitle(APIView):
+    def get(self,request):
+        x=request.query_params.get("title")
+        post=Post.objects.filter(title__icontains=x)
+
+        # print(post.tags.all())
+        print(post[1])
+        # print(x.tags.all())
+        # print(x.comments.all())
+        # print(x.comments.all())
+
+        serailizer=postSerailizer(post,many=True,context={"request": request})
+        return Response({
+            "status": 200,
+            "statusText": "ok",
+            "message": "Data fetched successfully",
+            "data":
+                serailizer.data
+        })

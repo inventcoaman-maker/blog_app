@@ -115,8 +115,7 @@ export default function AllPost() {
     <div className="posts-section">
       <div className="posts-grid">
         {loading
-          ? // Show 6 skeleton cards while loading
-            Array.from({ length: 6 }, (_, index) => (
+          ? Array.from({ length: 6 }, (_, index) => (
               <PostSkeleton key={`skeleton-${index}`} />
             ))
           : posts.map((post) =>

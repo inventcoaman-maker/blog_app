@@ -35,7 +35,8 @@ urlpatterns=[
     path("savedPost/<int:post_id>/",views.savedPost.as_view()),
     path("allSavedPost/",views.allSavedPost.as_view()),
     path("history/",views.history.as_view()),
-    path("historyDelete/",views.historyDelete.as_view())
+    path("historyDelete/",views.historyDelete.as_view()),
+    path("postByTitle/",views.postByTitle.as_view())
 
 
 

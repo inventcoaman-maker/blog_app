@@ -95,7 +95,6 @@ export default function Post_Edit() {
       navigate("/");
     } catch (error) {
       const errorMsg = error.response?.data?.error || "Something went wrong";
-
       toast.error(errorMsg);
     }
   };
@@ -169,6 +168,9 @@ export default function Post_Edit() {
 
           <div className="file-field">
             <label htmlFor="thumbnail">Thumbnail:</label>
+            {post.thumbnail_image && (
+              <p>Current: {post.thumbnail_image.split("/").pop()}</p>
+            )}
             {/* {post.thumbnail_image && (
               // <p>Current: {post.thumbnail_image.split("/").pop()}</p>
             )} */}

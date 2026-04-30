@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -21,6 +21,7 @@ function Login() {
   });
   const [otp, setOtp] = useState("");
   const [showOtpInput, setShowOtpInput] = useState(false);
+  const [loading, setLoading] = useState(false);
   const handleChange = (e) => {
     setInputValue({
       ...inputValue,
@@ -34,31 +35,51 @@ function Login() {
   // };
   // console.log(inputValue);
   console.log(otp);
+  const delay = (time) => {
+    return new Promise((resolve) => {
+      setTimeout(resolve, time);
+    });
+  };
   // console.log(localStorage.getItem("email", otp.otp));
-
   const sendOtp = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      const response = await generateOtp(inputValue.email);
+      const res = await Promise.all([
+        generateOtp(inputValue.email),
+        delay(800),
+      ]);
 
-      console.log(response.data);
+      // console.log(res.data);
       localStorage.setItem("email", inputValue.email);
-      setShowOtpInput((prev) => !prev);
+
+      setShowOtpInput(true);
     } catch (error) {
       toast.error(error.response?.data?.error || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setLoading((prev) => !prev);
+  //   }, 5000);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   const VerifyOtp = async (e) => {
     e.preventDefault();
+
     const email = localStorage.getItem("email");
     if (!email) {
       return toast.error("Email not found. Please try again.");
     }
     try {
       await verifyOtp({ email, otp });
+
       await fetchUser();
+
       navigate("/");
       toast.success("Login successful 🎉");
     } catch (error) {
@@ -88,15 +109,17 @@ function Login() {
       <div className="signup-container">
         <div className="signup-card">
           <h2>login</h2>
-          {/* <GoogleLogin
-            onSuccess={handleSuccess}
-            onError={() => console.log("Login Failed")}
-          /> */}
-          {showOtpInput ? (
+          {loading ? (
+            <div class="d-flex justify-content-center">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          ) : showOtpInput ? (
             <form onSubmit={VerifyOtp}>
               <div className="input-group">
                 <input
-                  type="password"
+                  type="text"
                   onChange={(e) => setOtp(e.target.value)}
                   value={otp}
                   name="otp"
