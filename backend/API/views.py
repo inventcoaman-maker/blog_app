@@ -361,28 +361,37 @@ class allPost(APIView):
                 queryset = queryset.filter(category__id=category)
                 if(len(queryset)==0):
                     return Response({
-                        "message":"not data found"
+                        "message":"not data found",
+                        "status":400
                     },status=400)
                
             if tag:
                 queryset = queryset.filter(tags__id=tag)
                 if(len(queryset)==0):
                     return Response({
-                        "message":"not data found"
+                        "message":"not data found",
+                         "status":400
                     },status=400)
             if author:
                 queryset = queryset.filter(author__id=author)
                 print(queryset)
                 if(len(queryset)==0):
                     return Response({
-                        "message":"not data found"
+                        "message":"not data found",
+                         "status":400
                     },status=400)
             if title:
                 queryset=queryset.filter(title__icontains=title)
                 if(len(queryset)==0):
                     return Response({
-                        "message":"not data found"
+                        "message":"not data found",
+                         "status":400
                     },status=400)
+                if(title.strip()=="" or title is None):
+                    return Response({
+                        "error":'title cant be empty',
+                        "status":400
+                    })
 
             
             if not request.user.is_authenticated:
@@ -630,7 +639,7 @@ class singlePost(APIView):
 class comment(APIView):
     def get(self,request,id):
         x=get_object_or_404(Post,id=id)
-        comments = x.comments.all() 
+        comments = x.comments.all().order_by("-created_at")
         print(len(comments))
         serializer = commentSerailizer(comments, many=True)   
         return Response({
@@ -646,6 +655,7 @@ class comment(APIView):
        x=get_object_or_404(Post,id=id)
        print(x)
        if request.user.is_authenticated:
+           
            serializer=commentSerailizer(data=request.data)    
            if serializer.is_valid():
                serializer.save(user=request.user,post=x)
@@ -661,7 +671,7 @@ class comment(APIView):
             )
 class reply(APIView):
     def get(self, request, post_id):
-        replies = Reply.objects.filter(comment__post_id=post_id)
+        replies = Reply.objects.filter(comment__post_id=post_id).order_by("-created_at")
         serializer = replySerailizer(replies, many=True)
         return Response({
             "status": 200,
@@ -715,19 +725,23 @@ class profile(APIView):
                 "error": "Last name cannot be empty"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        if phone1:
-            phone1=phone1.strip()
-            if(len(phone1)>10 or not rule.search(phone1) or len(phone1)==0):
-              return Response({
-                 "status": 400,
+        if phone1 is not None:
+            phone1 = phone1.strip()
+            if len(phone1) == 0:
+                return Response({
+                    "status": 400,
                     "statusText": "Bad Request",
-                    "error": "Phone must be exactly 10 digits and contain only number"}, status=status.HTTP_400_BAD_REQUEST)
-        print(phone1)
-        if (User.objects.filter(phone=phone1).exclude(id=request.user.id).exists()):
-            return Response({
-                 "status": 400,
+                    "error": "Phone cannot be empty. Provide a valid 10-digit phone number."}, status=status.HTTP_400_BAD_REQUEST)
+            if len(phone1) != 10 or not rule.fullmatch(phone1):
+                return Response({
+                    "status": 400,
                     "statusText": "Bad Request",
-                    "error": "Phone number already in use"},status=status.HTTP_400_BAD_REQUEST)
+                    "error": "Phone must be exactly 10 digits and contain only numbers."}, status=status.HTTP_400_BAD_REQUEST)
+            if User.objects.filter(phone=phone1).exclude(id=request.user.id).exists():
+                return Response({
+                    "status": 400,
+                    "statusText": "Bad Request",
+                    "error": "Phone number already in use."},status=status.HTTP_400_BAD_REQUEST)
         
         serializer=profileSerializer(x,data=request.data,partial=True)
         if serializer.is_valid():
@@ -935,10 +949,34 @@ class historyDelete(APIView):
 class postByTitle(APIView):
     def get(self,request):
         x=request.query_params.get("title")
-        post=Post.objects.filter(title__icontains=x)
+        post = Post.objects.filter(title__icontains=x)
+        # for i in post.values():
+        #     if(i["title"].strip()==" "):
+        #         return Response({
+        #             "status":400,
+        #             "message":"title cant be empty"
+        #         })
+
+            # print(i["id"],i["title"])
+        if(x is None or  x.strip()==""):
+            return Response({
+                   "status":400,
+                    "message":"title cant be empty"
+                },status=400)
+
+
+        
+        
+           
+        # print(post)
+        # if(post.strip()==""):
+        #     return Response({
+        #         "status":400,
+        #         "message":"title cant be empty"
+        #     })
 
         # print(post.tags.all())
-        print(post[1])
+        # print(post[1])
         # print(x.tags.all())
         # print(x.comments.all())
         # print(x.comments.all())

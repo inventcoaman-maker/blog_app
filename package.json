@@ -1,5 +1,33 @@
 {
-  "dependencies": {
-    "axios": "^1.15.2"
-  }
+  "name": "blog-project-monorepo",
+  "version": "1.0.0",
+  "description": "Blog project with Django backend and React frontend",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "install:frontend": "cd frontend && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && python manage.py runserver",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "test": "cd frontend && npm run test",
+    "lint": "cd frontend && npm run lint",
+    "format": "cd frontend && npm run format"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "keywords": [
+    "blog",
+    "django",
+    "react",
+    "monorepo"
+  ],
+  "author": "Your Company",
+  "license": "MIT"
 }

@@ -378,7 +378,7 @@ def sign_up(request):
         if errors:
             return render(request,"blog/signup.html",{"errors":errors})
         # success.append("Account created successfully!")
-        # if success:
+        # if success: 
         #     return render(request,"blog/signup.html",{"success":success})
         # print(errors)
         user = User.objects.create_user(first_name=first_name,last_name=last_name,password=password,email=email)

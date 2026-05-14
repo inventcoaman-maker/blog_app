@@ -31,3 +31,22 @@ dist-ssr
 *.zip
 .vscode.zip
 backend/.vscode.zip
+
+# Python virtual environment
+myvenv/
+backend/myvenv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
+*.sqlite3
+staticfiles/
+media/
